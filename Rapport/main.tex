@@ -1,0 +1,236 @@
+%! TeX program = lualatex
+\documentclass[a4paper, 12pt]{article}
+
+\usepackage{fontspec}
+\usepackage{multicol}
+\usepackage[french]{babel}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{wrapfig}
+\usepackage[french]{datetime}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{stmaryrd}
+\usepackage{amsthm}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{minted}
+
+% Required for UTF-8 characters in minted env
+\setmonofont{FiraCode}
+
+\setminted[lean]{linenos, fontsize=\footnotesize}
+
+\newcommand{\lean}[1]{\mintinline{lean}{#1}}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    pdftitle={Démonstration assistée par ordinateur},
+}
+
+\urlstyle{same}
+
+\begin{document}
+
+\begin{titlepage}
+
+    \begin{figure}
+        \centering
+        % \includegraphics[width=8cm]{logo.png} % Logo Sorbonne
+        \vspace{8cm}
+    \end{figure}
+
+    \vspace{6cm}
+
+    \begin{center}
+        {\Huge Démonstration assistée par ordinateur\\}
+        \vspace{0.5cm}
+        {\huge Rapport de mi-parcours\\}
+
+        \vspace{1.5cm}
+
+        {\large Luc Saccoccio--Le Guennec\\ Nour Bouabid\\ Charles De Vergeron}
+        \vfill
+        {\large \today}
+        \pagebreak
+    \end{center}
+
+\end{titlepage}
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+\subsection{Assistants de preuves}
+
+Un assistant de preuve est un logiciel permettant l'écriture d'énoncés logiques et la vérification de preuves formelles. Il existe de nombreux assistants de preuves, parmi lesquels on peux citer :
+
+\begin{itemize}
+    \item Coq, développé en OCaml par l'équipe \href{http://www.pps.univ-paris-diderot.fr/pi.r2/}{PI.R2}
+    \item Isabelle, développé en Standard ML et Scala
+    \item Agda, développé en Haskell
+\end{itemize}
+
+On peut noter qu'ils diffèrent sur de nombreux points. En prenant Coq comme standard :
+
+\begin{itemize}
+    \item Isabelle n'est pas en capacité de raisonner avec des types dépendants
+    \item Agda ne dispose pas de mécanismes d'automatisation de preuves
+\end{itemize}
+
+Qui plus est, il existe des langages de programmation dont le système de types permet la formalisation de certains énoncés, comme Haskell; ou n'ayant pas pour objectif de permettre la formalisation d'énoncés mathématiques mais plutôt la vérification de programmes informatiques, comme F*.
+
+Le fonctionnement des assistants de preuves, autrement dit ce qui permet de s'assurer que l'assistant comprend bien les énoncés que nous encodons et qu'il a en effet raison lorsqu'il affirme que notre preuve est (ou n'est pas) acceptable; repose sur la, ou plutôt une théorie des types.
+
+\subsection{Petit historique}
+
+Ce qui suit est un historique extrêmement concis et réducteur de plus de 2 000 ans d'histoire d'une certaine branche de la logique.
+
+L'histoire de la formalisation des mathématiques commence avec Aristote et l'introduction de la méthode axiomatique et de règles logiques. Après de nombreuses péripéties, on peut considérer que ces objectifs furent atteint par Frege pour la logique classique, et par Heyting pour la logique intuitionniste. Cette considération est néanmoins discutable, et en 1910 Whitehead et Russell introduisirent la notion de type pour y remédier dans les volumineux \textit{Principia Mathematica}. Malgré son efficacité à résoudre les problèmes ayant motivé sa création, c'est à dire les paradoxes de la théorie naïve des ensembles de Frege, cette théorie était assez rigide et ne formalisait pas le mécanisme de substitution. C'est avec le $\lambda$-calcul d'Alonzo Church en 1940 que ce mécanisme est formalisé, et il crée la théorie des types simples. En 1934 puis en 1958, Haskell Curry remarque qu'il y a une forme de correspondance entre les types et les schémas d'axiomes intuitionnistes, puis de même entre certains modèles de preuves et certains modèles de calcul. Enfin, en 1969, William Alvin Howard observe que la déduction naturelle peut s'interpréter comme sa version intuitionniste vu comme une version typée du $\lambda$-calcul :
+
+\begin{center}
+    Il y a un isomorphisme entre les $\lambda$-termes et les preuves, et entre leurs types et les énoncés logiques.
+\end{center}
+
+C'est la correspondance de Curry-Howard(-Lambek pour la version catégoriste)
+
+Dans les années 70, de Bruijn étend le système de types en introduisant les types dépendants avec pour objectif affiché de formaliser et vérifier les mathématiques. Il crée alors le premier assistant de preuve, \textbf{AUTOMATH}. En 1973, un autre assistant de preuve, Mizar, est développé, mais sur des bases ensemblistes (en particulier la théorie des ensembles de Tarski-Grothendieck). Il est publié en 1989. Mais à partir des années 80, il y a une explosion de la recherche en ce domaine, avec Per Martin-Löf, Girard et Barendregt...
+
+L'histoire est parcellée de péripéties, mais nous finirons cet historique en 2004 avec la formalisation en Coq du théorème des quatres couleurs. Bien que ce résultat fut prouvé maintes fois (en 1976 par Appel et Haken, 1996, 1997...) y compris sur des assistants de preuves, la formalisation en Coq réduit d'une part les programmes à un seul : le noyau de Coq, et d'autre part automatise les très nombreux configurations à prendre en compte.
+
+\subsection{Ce projet}
+
+Ce projet a pour but d'implémenter une partie de notre cours de topologie métrique (LU3MA260) dans l'assistance de preuve \href{https://lean-lang.org/}{Lean}. Cela implique donc de commencer par définir les objets étudiés (espaces métriques, boules, applications continues...) puis d'encoder et de vérifier nos théorèmes et preuves.
+
+\section{Lean}
+
+Pour ce projet, nous utiliserons l'assistant de preuves Lean (version 4.5.0 lors de l'écriture de ce rapport). Il y a plusieurs raisons pour ce choix parmi lesquelles :
+\begin{itemize}
+    \item L'environnement de développement interactif
+    \item Le support natif des caractères unicode
+    \item Les capacités de méta programmation
+\end{itemize}
+
+Outre, bien entendu, son utilisation dans D$\exists\forall$DUCTION \cite{deaduction}, sa simplicité d'apprentissage, la documentation (\cite{theorem_proving}, \cite{math_in_lean}) et la communauté Lean sur Zulip pouvant répondre à nos interrogations.
+
+Nous utilisons essentiellement Mathlib, une librairie contenant un vaste ensemble de résultats mathématiques, pour des structures usuelles comme les réels ainsi que pour conclure des preuves nécessitant la manipulation d'inégalités, cela n'était pas très intéressant.
+
+\subsection{Histoire}
+
+Lean est un langage open-source développé depuis 2013 basé sur le calcul des constructions (la version du lambda-calcul la plus "forte" selon la classification de Barendregt \cite{Barendregt_1991}), tout comme Coq. Bien que les premiers essais aient contenus des fondations alternatives (notamment la théorie homotopique des types), en 2017 sort Lean 3, la première version stable implémentée majoritairement en C++. En 2021 commence Lean 4, une réimplémentation de Lean majoritairement en Lean avec certaines parties en C++. Cette version contient en outre un système de macros extrêmement puissant qui permet d'implémenter et de modifier un ensembles de composants du frontend en Lean plutôt qu'en C++.
+
+\subsection{Cycle de développement}
+
+Un projet Lean commence par la création d'un dossier dédié à l'aide du programme \texttt{lake}. On peut alors préciser que l'on compte utiliser Mathlib dans le fichier \texttt{lakefile.lean}. Ensuite on peut commencer à programmer ou prouver des résultats. Seul le second cas nous intéresse. L'arborescence d'un projet Lean consiste en un unique dossier portant le nom du projet, lequel contient un ensemble de dossiers et de fichiers Lean.
+
+\subsection{Méta programmation}
+
+
+\section{La topologie métrique en Lean}
+
+\subsection{Contexte et mise en place}
+
+Le cours de topologie LU3MA260\cite{topology_memo} est divisé 5 parties et 2 appendices :
+
+\begin{itemize}
+    \item Espaces métriques
+    \item Complétude
+    \item Compacité
+    \item Connexité
+    \item Espaces vectoriels normés, espaces de Banach
+    \item Appendice I : ensembles et applications
+    \item Appendice II : quelques schémas
+\end{itemize}
+
+Nous laisserons de côté les appendices ainsi que la dernière section sur les espaces vectoriels normés et les espaces de Banach.
+
+\subsection{Espaces métriques}
+
+On commence par définir un espace métrique. C'est une classe de types sur lesquels on peut définir une "distance", c'est à dire la donnée de l'application et des propriétés qu'elle vérifie :
+
+\begin{minted}{lean}
+class MetricSpace (α : Type u) where
+    dist : α → α → ℝ
+    dist_pos : ∀ {x y : α}, 0 ≤ dist x y
+    dist_sep : ∀ {x y : α}, dist x y = 0 ↔ x = y
+    dist_symm : ∀ {x y : α}, dist x y = dist y x
+    dist_triangle : ∀ {x y z : α}, dist x z ≤ dist x y + dist y z
+
+variable {X : Type u} [MetricSpace X]
+\end{minted}
+
+La dernière instruction, \lean{variable}, permet de définir dans le contexte (soit le fichier, soit la \lean{section} dans laquelle on se trouve) des variables. Ici, nous nous sommes donnés un type \lean{X} dans l'univers \lean{u}, ainsi qu'une instance de la classe \lean{MetricSpace} pour le type \lean{X}. En termes mathématiques, nous nous sommes donnés un espace métrique $X$.
+
+On définit ensuite les boules ouvertes et on introduit la notation usuelle $B(x, r)$ pour la boule de rayon $r$ centrée en $x$. Le type \lean{Set X} est le type des ensembles à valeurs dans \lean{X}.
+
+\begin{minted}{lean}
+def open_ball (x : X) (r : ℝ) : Set X := {y | d x y < r}
+
+notation "B(" x "," r ")" => open_ball x r
+\end{minted}
+
+Il est très pratique d'introduire un ensemble de lemmes relativement évidents qui faciliteront les preuves. Ils sont tous marqués avec \lean{@[simp]}, ce qui indique à Lean qu'il peut les utiliser lors de l'application des tactiques `simp` :
+
+\begin{minted}{lean}
+@[simp]
+lemma dist_sep_eq_zero (x : X) : d x x = 0 := dist_sep.mpr rfl
+
+@[simp]
+lemma mem_open_ball (x : X) (r : ℝ) (y : X) : y ∈ B(x, r) ↔ dist x y < r := Iff.rfl
+
+@[simp]
+lemma center_in_ball (x : X) (r : ℝ) : r > 0 → x ∈ B(x, r) := by
+  intro r_pos
+  simpa [open_ball]
+\end{minted}
+
+On finit enfin par la définition d'un ouvert. C'est un objet de type \lean{Prop}, autrement dit un énoncé mathématique, paramétré par l'ouvert $U$.
+
+\begin{minted}{lean}
+def is_open (U : Set X) : Prop := ∀ x ∈ U, ∃ r > 0, B(x, r) ⊆ U
+\end{minted}
+
+On peut alors montrer un premier résultats, c'est à dire que le boule ouverte est bien ouverte :
+
+\begin{minted}{lean}
+lemma open_ball_is_open : ∀ x : X, ∀ r > 0, is_open B(x, r) :=
+  by
+    intros x r _ y y_in
+    set ε := r - d x y with hε
+    use ε
+    apply And.intro
+    . simp [open_ball] at y_in
+      linarith only [hε, y_in]
+    . intros z z_in
+      rw [mem_open_ball] at *
+      have p : d x z ≤ d x y + d y z := dist_triangle
+      linarith only [p, z_in, y_in, hε]
+\end{minted}
+
+Pour ce qui est de la preuve, elle suit le raisonnement suivant :
+
+\begin{itemize}
+    \item On introduit les variables \lean{x}, \lean{r}, \lean{y} et l'hypothèse \lean{y_in} que \lean{y} est dans la boule \lean{B(x, r)}.
+\end{itemize}
+
+La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hypothèse que \lean{y} est dans la boule \lean{B(x, r)} (l'underscore après \lean{r} signifie simplement que l'on ne nomme pas l'hypothèse que \lean{r} est positif). On peut ensuite définir notre $ε$ ainsi que l'hypothèse \lean{hε} qui a pour type \lean{ε = r - d x y}. Puisque \lean{is_open U} a pour type \lean{∀ x ∈ U, ∃ r > 0, B(x, r) ⊆ U}, il faut donc montrer \lean{∃ r > 0, B(x, r) ⊆ U}. Cette syntaxe signifie en réalité \lean{∃ r, r > 0 ∧ B(x, r) ⊆ U} (\lean{∃} étant une syntaxe pour le type inductif \lean{Exists} paramétré par \lean{w} et \lean{h}, l'élément et la propriété sur cet élément). On indique donc que l'on utilise \lean{ε} et il reste à montrer la positivité et l'inclusion de la boule. La positivité s'obtient en revenant à la définition d'une boule ouverte puis en appliquant la tactique \lean{linarith} qui résout un but à l'aide d'arithmétique linéaire.
+
+\subsection{Complétude}
+
+\subsection{Compacité}
+
+\subsection{Connexité}
+
+\newpage
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{main}
+
+\end{document}
