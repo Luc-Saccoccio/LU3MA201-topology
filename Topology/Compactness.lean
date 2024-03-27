@@ -5,7 +5,7 @@ universe u v w
 -- III Compacité
 -- 1. théorie
 
-section compacite
+section partie_compacte
 
 -- a) suite extraite
 
@@ -115,10 +115,23 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact ⟨ lim_xf,l_in_h⟩
   exact h_closed
 
+end partie_compacte
 
 
---("L'image continue d'un compact est compacte") Soit f : X ! Y
---une application continue entre deux espaces metriques. Si X est compact, alors f(X) est compact.
+
+
+class compact_MetricSpace (K : Type u) [MetricSpace K] := (is_compact_univ : is_compact (univ : Set K))
+
+open compact_MetricSpace
+
+section espace_compact
+
+variable {X Y : Type u} [MetricSpace X] [MetricSpace Y] [compact_MetricSpace X]
+
+
+lemma image_continuous_compact (f : X → Y ) (h: Continuous f): is_compact (Set.image f univ) := by
+  sorry
+
 
 --Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes,
 -- le premier est compact si et seulement si le second est compact.
@@ -129,3 +142,5 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
 --(c) Compacite dans RN
 --(d) Compacite et recouvrements
 --(e) Continuite uniforme
+
+ 
