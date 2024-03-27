@@ -280,9 +280,9 @@ variable {X : Type u} [MetricSpace X]
 
 -- On définit une suite comme une fonction u : ℕ → X
 
-def lim (x : ℕ → X) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+def lim (K:Set X) (x : ℕ → K) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
 
-lemma sequential_closure (E : Set X) (l : X) : l ∈ Closure E ↔ ∃ x : ℕ → X, (∀ n : ℕ, x n ∈ E) ∧ (lim x l) :=
+lemma sequential_closure (E : Set X) (l : X) : l ∈ Closure E ↔ ∃ x : ℕ → E , lim E x l :=
   by
     apply Iff.intro
     . sorry
