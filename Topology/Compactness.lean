@@ -2,17 +2,18 @@ import Topology.Basic
 
 universe u v w
 
+
 -- III Compacité
 -- 1. théorie
 
-section partie_compacte
+section compacite
 
 -- a) suite extraite
 
-variable {X : Type u} [MetricSpace X]
+variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
 
 
-def converge_in (K : Set X) (x : ℕ → K) (l : X) := (lim K x l) ∧ l ∈ K
+def converge_in (K : Set X) (x : ℕ → K) (l : X) := (lim  x l) ∧ l ∈ K
 -- convergence dans une partie de X
 
 def strictement_croissante (f : ℕ → ℕ ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
@@ -34,13 +35,13 @@ lemma stricte_croissance_geq (f : ℕ → ℕ) : strictement_croissante f → �
     . exact Nat.zero_le (f 0)
     . exact Nat.succ_le_of_lt ∘ Nat.lt_of_le_of_lt hi $ h (n + 1) n (Nat.lt_succ_self n)
 
-lemma unicite_limite  ( K:Set X) (x : ℕ → K) (l : X) (l' : X) (hl: lim K x l) (hl': lim K x l') : l = l':= by
+lemma unicite_limite  ( K:Set X) (x : ℕ → K) (l : X) (l' : X) (hl: lim  x l) (hl': lim  x l') : l = l':= by
   choose N hN using hl
   choose N' hN' using hl'
 
   sorry
 
-lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim K x l ∧ strictement_croissante f -> lim K (x ∘ f) l :=
+lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim  x l ∧ strictement_croissante f -> lim  (x ∘ f) l :=
   by
     rintro ⟨hx, hf⟩ ε hε
     obtain ⟨N, hN ⟩ := hx ε hε
@@ -55,6 +56,7 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
 -- b) compacité
 
 def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ converge_in K (x ∘ f) l
+
 
 lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
   by
@@ -77,7 +79,7 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
 
     intro compacite
     choose f l' hl' hf conv_l' using compacite x
-    have lim_l : lim K (x ∘ f) l := limite_suite_extraite K x l f ⟨hx, hf⟩
+    have lim_l : lim (x ∘ f) l := limite_suite_extraite K x l f ⟨hx, hf⟩
     have egalite: l=l':= by apply unicite_limite K (x∘f) l l' lim_l conv_l'.1
     rw [egalite] at l_not_in_K
     apply l_not_in_K at hl'
@@ -100,7 +102,7 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   have eg : ∀ n , x n = (y n :X):= by
     intro n
     rfl
-  have lim_xf : lim H (x∘f) l := by 
+  have lim_xf : lim (x∘f) l := by 
     intro ε hε 
     obtain ⟨ N, hN⟩ := conv_in_K.1 ε hε 
     use N
@@ -115,22 +117,36 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact ⟨ lim_xf,l_in_h⟩
   exact h_closed
 
-end partie_compacte
 
 
 
 
-class compact_MetricSpace (K : Type u) [MetricSpace K] := (is_compact_univ : is_compact (univ : Set K))
+lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (univ : Set X)) : is_compact (Set.image f univ) := by
+  intro y 
+  have hn : ∀ n, ∃ xn ∈ univ, f (xn ) = y n := by
+    intro n 
+    exact ( (Set.mem_image f univ ( y n)).mp (y n).2 )
 
-open compact_MetricSpace
+  choose x hx using hn
 
-section espace_compact
+  let x' : ℕ → univ := λ n ↦ ⟨x n, (hx n).1 ⟩
+  obtain ⟨ j, l, _, croiss_f,conv_in_univ⟩ := univ_compact x'
 
-variable {X Y : Type u} [MetricSpace X] [MetricSpace Y] [compact_MetricSpace X]
+  sorry -- j'ai besoin du lemme  sequential_continous
+  
 
+def lim_X (x : ℕ → X) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε -- ici j'ai besoin de prendre une suite de N dans X pour ensuite la composer par f : X → Y  dans le lemme suivant 
 
-lemma image_continuous_compact (f : X → Y ) (h: Continuous f): is_compact (Set.image f univ) := by
+lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim_X x x₀ →  lim_X ( f ∘ x ) (f x₀ ):= by 
   sorry
+-- est ce que je drevrais plutot travailler avec f : (univ : Set X) → Y et ainsi utiliser la définition lim de Basic.lean ? 
+
+
+-- j'aurais besoin également des définitions suivantes
+
+def inverse  ( f: X → Y )  (h: Function.Bijective f ) := sorry  -- je cherche comment définir la fonction inverse qui à une fonction bijective associe son inverse
+
+def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= Continuous (inverse f h2) 
 
 
 --Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes,
@@ -142,5 +158,3 @@ lemma image_continuous_compact (f : X → Y ) (h: Continuous f): is_compact (Set
 --(c) Compacite dans RN
 --(d) Compacite et recouvrements
 --(e) Continuite uniforme
-
- 
