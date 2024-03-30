@@ -232,7 +232,7 @@ lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K :
   intro h x hx 
   obtain ⟨ f, l, croiss_f,lim_l⟩ := h x  
   use l
-  sorry --je terminerai plus tard
+  apply Cauchy_val_adherence_conv x l f hf lim_l hx 
 
 
 --(d) Compacite et recouvrements
