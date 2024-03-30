@@ -2,7 +2,6 @@ import Topology.Basic
 
 universe u v w
 
-
 -- III Compacité
 -- 1. théorie
 
@@ -12,14 +11,9 @@ section compacite
 
 variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
 
-
-def converge_in (K : Set X) (x : ℕ → K) (l : X) := (lim  x l) ∧ l ∈ K
--- convergence dans une partie de X
-
 def strictement_croissante (f : ℕ → ℕ ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
 
 def croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n >= m → f n >= f m
-
 
 lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissante f → croissante f :=
   by
@@ -55,13 +49,15 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
 
 -- b) compacité
 
-def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ converge_in K (x ∘ f) l
+-- definition d'une partie compact de X
+def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
 
-
+-- tout compact est fermé
 lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
   by
     intro K h
     contrapose! h
+
     have diff : Closure K ≠ K := by
       intro absurde
       have j : is_closed (Closure K) := by exact closure_is_closed
@@ -71,6 +67,7 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
 
     have c : K ⊂ Closure K :=
       Set.ssubset_iff_subset_ne.mpr ⟨sub_closure, diff.symm⟩
+
     have l_in_closure_not_in_K : ∃ l : X, l ∈ Closure K ∧ l ∉ K :=
       Set.exists_of_ssubset c
 
@@ -78,33 +75,33 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
     obtain ⟨x, hx⟩ := (sequential_closure K l).mp l_in_closure
 
     intro compacite
-    choose f l' hl' hf conv_l' using compacite x
+    choose f l' hl' hf lim_l' using compacite x
     have lim_l : lim (x ∘ f) l := limite_suite_extraite K x l f ⟨hx, hf⟩
-    have egalite: l=l':= by apply unicite_limite K (x∘f) l l' lim_l conv_l'.1
+    have egalite: l=l':= by apply unicite_limite K (x∘f) l l' lim_l lim_l'
     rw [egalite] at l_not_in_K
     apply l_not_in_K at hl'
     exact hl'
- 
 
+-- toute partie fermé de X compact est compact
 lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_sub: H  ⊆ K) (h_closed : is_closed H)  : is_compact H := by
   intro x
   have x_in_k : ∀ (n : ℕ), (x n : X) ∈ K := by
     intro n
-    apply Set.mem_of_subset_of_mem h_sub 
+    apply Set.mem_of_subset_of_mem h_sub
     apply (x n).2
 
   let y : ℕ → K := λ n ↦ ⟨x n, x_in_k n⟩
-  obtain ⟨ f, l, _, croiss_f,conv_in_K⟩ := k_compact y
-  
-  have l_in_h : l ∈ Closure H := by apply (sequential_closure H l).mpr  ⟨ x∘f,conv_in_K.1⟩
+  obtain ⟨ f, l, _, croiss_f,lim_in_K⟩ := k_compact y
+
+  have l_in_h : l ∈ Closure H := by apply (sequential_closure H l).mpr  ⟨ x∘f,lim_in_K⟩
   rw [closure_closed_is_closed] at l_in_h
   use f,l, l_in_h, croiss_f
   have eg : ∀ n , x n = (y n :X):= by
     intro n
     rfl
-  have lim_xf : lim (x∘f) l := by 
-    intro ε hε 
-    obtain ⟨ N, hN⟩ := conv_in_K.1 ε hε 
+  have lim_xf : lim (x∘f) l := by
+    intro ε hε
+    obtain ⟨ N, hN⟩ := lim_in_K ε hε
     use N
     intros n hn
     specialize hN n hn
@@ -114,25 +111,27 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
     rw [<- eg] at hN
     exact hN
     
-  exact ⟨ lim_xf,l_in_h⟩
+  exact  lim_xf
   exact h_closed
 
 
+-- cette seconde définition de la limite me permettra de d'étudier la convergence dans différents espaces métriques, la distance utilisée dans cette définition dépendra bien de l'espace métrique su lequelle elle est défini
+def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ] := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
 
+-- est ce que Luc peut s'occuper de ce lemme?
+lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim' x x₀ →  lim' ( f ∘ x ) (f x₀ ):= by
+  
+  apply Iff.intro
+  · intro H x l ε hε 
+    sorry
 
-
-def lim_X (x : ℕ → X) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
-
-
-lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim_X x x₀ →  lim_X ( f ∘ x ) (f x₀ ):= by
-  sorry
-
+  · sorry
 
 
 lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (Set.univ : Set X)) : is_compact (Set.image f Set.univ) := by
 
 -- is_compact prend un argument de type Set X, de même Set.image prend en argument f et un objet de type Set X, on utilise donc Set.univ quand on ne peut pas utiliser X directement
--- concilier ces deux types a alourdi la preuve...
+-- je fait de jongler entre ces deux types a un peu alourdi la preuve qui suit
 
   intro y
   have hn : ∀ n, ∃ xn ∈ Set.univ, f (xn ) = y n := by
@@ -141,8 +140,8 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
 
   choose x hx using hn
 
-  let x' : ℕ → Set.univ := λ n ↦ ⟨x n, (hx n).1 ⟩  -- première adaptation, ceci permet d'appliquer la définition de la compacité à x' à valeurs dans Set.univ au lieu de X
-  obtain ⟨ j, l, _, croiss_j,conv_in_univ⟩ := univ_compact x'
+  let x' : ℕ → Set.univ := λ n ↦ ⟨x n, (hx n).1 ⟩  -- ceci permet d'appliquer la définition de la compacité à x' à valeurs dans Set.univ au lieu de X
+  obtain ⟨ j, l, _, croiss_j,lim_in_univ⟩ := univ_compact x'
 
   use j, (f l) 
 
@@ -160,11 +159,10 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
   exact croiss_j
 
 -- la dernière proposition du goal se montre en plusieurs étapes
-
-  have limite : lim_X (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim_X car f prend ses antécédents dans X, donc on ne peut la composer qu'avec x qui est a valeur dans X et non x' qui est à valeur dans Set.univ
+  have limite : lim' (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim' car f prend ses antécédents dans X, donc on ne peut la composer qu'avec x qui est a valeur dans X
     apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
     intro ε hε 
-    obtain ⟨ N, hN ⟩ := conv_in_univ.1 ε hε
+    obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
     use N 
     have eg : ∀ n, x n = x' n := by  
       intro n 
@@ -174,33 +172,70 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
     rw[eg (j n)]
     exact hN n
 
-  --en revenant aux ε on montre facilement que lim_X et lim sont équivalentes
-  apply And.intro
-  · intro ε hε
-    obtain ⟨ N, hN ⟩ :=  limite ε hε
-    use N
-    intro n hn
-    rw [Function.comp_apply]
-    rw [←  (hx (j n)).2]
-    specialize hN n hn
-    rw [ Function.comp_apply] at hN 
-    exact hN
-
-  · exact hf l 
+  --en revenant aux ε on montre facilement que lim' et lim sont équivalentes
+  intro ε hε
+  obtain ⟨ N, hN ⟩ :=  limite ε hε
+  use N
+  intro n hn
+  rw [Function.comp_apply]
+  rw [←  (hx (j n)).2]
+  specialize hN n hn
+  rw [ Function.comp_apply] at hN 
+  exact hN
 
   
 
+  
+-- je n'ai pas su formuler les deux définitions qui suivent, la première est une application qui prend en entrée une fonction bijective et renvoit son inverse
 
-def inverse  ( f: X → Y )  (h2: Function.Bijective f ):=
+--def inverse  ( f: X → Y )  (h2: Function.Bijective f ):=
+--def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= Continuous (inverse f)
 
-def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= 
+-- ensuite je montrerai:
+
+--Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes, le premier est compact si et seulement si le second est compact.
+
+--Si f : X ! Y est une bijection continue entre deux espaces metriques, et si (X; dX) est compact, alors sa reciproque f􀀀1 est continue, et f est un homeomorphisme.
 
 
---Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes,
--- le premier est compact si et seulement si le second est compact.
+-- ceci défini un espace métrique compact, j'en ai besoin pour montrer qu'un espace compact est complet
 
---Si f : X ! Y est une bijection continue entre deux espaces metriques, et si (X; dX) est compact,
---alors sa reciproque f􀀀1 est continue, et f est un homeomorphisme.
+def Compact (K : Type v) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
+
+def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥ N,  d (u m) (u n) < ε
+
+def Complet (K : Type v) [MetricSpace K] := ∀ u : ℕ → K, CauchySeq u → ∃ l : K, lim' u l  -- j'ai repris la def de Charles, pourquoi type v au lieu de type u? il semnle que ça ne change rien
+
+lemma Cauchy_val_adherence_conv (u : ℕ → X) (l : X) (f : ℕ → ℕ) (h1 : strictement_croissante f) (h2 : lim' (u∘f) l) (h3 :  CauchySeq u): lim' u l := by
+  intro ε hε 
+  specialize h3 (ε/2) (half_pos hε) 
+  specialize h2 (ε/2) (half_pos hε) 
+  obtain ⟨ N1, hN1 ⟩ := h2
+  obtain ⟨ N2, hN2 ⟩ := h3
+  use Nat.max N1 N2
+  intro n hn
+  have h : d l (u n) ≤  d l ( u (f n)) + d (u (f n)) (u n) := dist_triangle
+  have ineq1: Nat.max N1 N2 ≥ N1 := Nat.le_max_left  N1 N2
+  have ineq2: Nat.max N1 N2 ≥ N2 := Nat.le_max_right  N1 N2
+
+  specialize hN1 n (le_trans ineq1 hn )
+  specialize hN2 n (le_trans ineq2 hn )  
+  specialize hN2 (f n) ( le_trans (le_trans ineq2 hn )  (stricte_croissance_geq f h1 n)  )
+  rw [Function.comp_apply] at hN1
+  rw [dist_symm] at hN2
+
+  linarith
+  
+
+
+lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K := by
+  intro h x hx 
+  obtain ⟨ f, l, croiss_f,lim_l⟩ := h x  
+  use l
+  sorry --je terminerai plus tard
+
 
 --(d) Compacite et recouvrements
+
+
 --(e) Continuite uniforme
