@@ -121,32 +121,79 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
 
 
 
-lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (univ : Set X)) : is_compact (Set.image f univ) := by
-  intro y 
-  have hn : ∀ n, ∃ xn ∈ univ, f (xn ) = y n := by
-    intro n 
-    exact ( (Set.mem_image f univ ( y n)).mp (y n).2 )
+def lim_X (x : ℕ → X) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+
+
+lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim_X x x₀ →  lim_X ( f ∘ x ) (f x₀ ):= by
+  sorry
+
+
+
+lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (Set.univ : Set X)) : is_compact (Set.image f Set.univ) := by
+
+-- is_compact prend un argument de type Set X, de même Set.image prend en argument f et un objet de type Set X, on utilise donc Set.univ quand on ne peut pas utiliser X directement
+-- concilier ces deux types a alourdi la preuve...
+
+  intro y
+  have hn : ∀ n, ∃ xn ∈ Set.univ, f (xn ) = y n := by
+    intro n
+    exact ( (Set.mem_image f Set.univ ( y n)).mp (y n).2 )
 
   choose x hx using hn
 
-  let x' : ℕ → univ := λ n ↦ ⟨x n, (hx n).1 ⟩
-  obtain ⟨ j, l, _, croiss_f,conv_in_univ⟩ := univ_compact x'
+  let x' : ℕ → Set.univ := λ n ↦ ⟨x n, (hx n).1 ⟩  -- première adaptation, ceci permet d'appliquer la définition de la compacité à x' à valeurs dans Set.univ au lieu de X
+  obtain ⟨ j, l, _, croiss_j,conv_in_univ⟩ := univ_compact x'
 
-  sorry -- j'ai besoin du lemme  sequential_continous
+  use j, (f l) 
+
+  have hf : ∀ (t : X), f t ∈ f '' Set.univ := by
+    intro t
+    apply (Set.mem_image f Set.univ ( f t)).mpr
+    use t
+    apply And.intro
+    exact Set.mem_univ t
+    rfl
+    
+  apply And.intro
+  exact hf l 
+  apply And.intro
+  exact croiss_j
+
+-- la dernière proposition du goal se montre en plusieurs étapes
+
+  have limite : lim_X (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim_X car f prend ses antécédents dans X, donc on ne peut la composer qu'avec x qui est a valeur dans X et non x' qui est à valeur dans Set.univ
+    apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
+    intro ε hε 
+    obtain ⟨ N, hN ⟩ := conv_in_univ.1 ε hε
+    use N 
+    have eg : ∀ n, x n = x' n := by  
+      intro n 
+      rfl 
+    intro n
+    rw [Function.comp_apply]
+    rw[eg (j n)]
+    exact hN n
+
+  --en revenant aux ε on montre facilement que lim_X et lim sont équivalentes
+  apply And.intro
+  · intro ε hε
+    obtain ⟨ N, hN ⟩ :=  limite ε hε
+    use N
+    intro n hn
+    rw [Function.comp_apply]
+    rw [←  (hx (j n)).2]
+    specialize hN n hn
+    rw [ Function.comp_apply] at hN 
+    exact hN
+
+  · exact hf l 
+
   
 
-def lim_X (x : ℕ → X) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε -- ici j'ai besoin de prendre une suite de N dans X pour ensuite la composer par f : X → Y  dans le lemme suivant 
 
-lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim_X x x₀ →  lim_X ( f ∘ x ) (f x₀ ):= by 
-  sorry
--- est ce que je drevrais plutot travailler avec f : (univ : Set X) → Y et ainsi utiliser la définition lim de Basic.lean ? 
+def inverse  ( f: X → Y )  (h2: Function.Bijective f ):=
 
-
--- j'aurais besoin également des définitions suivantes
-
-def inverse  ( f: X → Y )  (h: Function.Bijective f ) := sorry  -- je cherche comment définir la fonction inverse qui à une fonction bijective associe son inverse
-
-def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= Continuous (inverse f h2) 
+def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= 
 
 
 --Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes,
@@ -155,6 +202,5 @@ def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f )
 --Si f : X ! Y est une bijection continue entre deux espaces metriques, et si (X; dX) est compact,
 --alors sa reciproque f􀀀1 est continue, et f est un homeomorphisme.
 
---(c) Compacite dans RN
 --(d) Compacite et recouvrements
 --(e) Continuite uniforme
