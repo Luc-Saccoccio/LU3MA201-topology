@@ -49,6 +49,11 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
 
 -- b) compacité
 
+-- cette seconde définition de la limite me permettra de d'étudier la convergence dans différents espaces métriques, la distance utilisée dans cette définition dépendra bien de l'espace métrique su lequelle elle est défini
+def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ] := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+
+def Compact (K : Type v) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
+
 -- definition d'une partie compact de X
 def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
 
@@ -115,8 +120,30 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact h_closed
 
 
--- cette seconde définition de la limite me permettra de d'étudier la convergence dans différents espaces métriques, la distance utilisée dans cette définition dépendra bien de l'espace métrique su lequelle elle est défini
-def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ] := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+-- dans un espace metrique compact, toute partie fermée est compact
+lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed K) : is_compact K := by
+  intro x
+  let x' : ℕ → X := λ n ↦ x n
+  obtain ⟨ f, l, hf,limite⟩ := hX x'
+  use f 
+  have eg : ∀ n , x n = x' n:= by
+    intro n
+    rfl
+  have limite2 : lim (x ∘ f) l := by
+    intro ε hε 
+    obtain ⟨ N , hN⟩ := limite ε hε 
+    use N 
+    intro n hn
+    specialize hN n hn
+    rw [Function.comp_apply]
+    rw [Function.comp_apply] at hN
+    rw [eg]
+    exact hN
+  have hl :l ∈ Closure K  := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩ 
+  rw [closure_closed_is_closed hK] at hl
+  use l
+
+
 
 -- est ce que Luc peut s'occuper de ce lemme?
 lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim' x x₀ →  lim' ( f ∘ x ) (f x₀ ):= by
@@ -197,10 +224,6 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
 
 --Si f : X ! Y est une bijection continue entre deux espaces metriques, et si (X; dX) est compact, alors sa reciproque f􀀀1 est continue, et f est un homeomorphisme.
 
-
--- ceci défini un espace métrique compact, j'en ai besoin pour montrer qu'un espace compact est complet
-
-def Compact (K : Type v) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
 
 def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥ N,  d (u m) (u n) < ε
 
