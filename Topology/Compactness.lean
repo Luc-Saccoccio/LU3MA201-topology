@@ -261,4 +261,75 @@ lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K :
 --(d) Compacite et recouvrements
 
 
---(e) Continuite uniforme
+
+lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ x: Fin n → X, Set.univ ⊆ ( ⋃ xi ∈ List.ofFn x, B( xi , α ) ):= by
+
+  contrapose hX -- on suppose que la conclusion n'est pas vérifiée et on montre que X n'est pas conmpact
+  push_neg at hX
+
+  -- on obtient une suite d'élément u tel que ∀n, et pour toute famille (x i)i≤ n, u n ∉ ⋃(i≤n) B(xi,α)
+  have h : ∀n, ∀ x : Fin n → X,  ∃ un ∈ Set.univ , un ∉ ⋃ xi ∈ List.ofFn x, B(xi,α) := by
+    intro n xn
+    apply (Set.not_subset_iff_exists_mem_not_mem).mp (hX n xn)
+  unfold Compact
+  push_neg
+
+  --on construit une suite x par récurence sur n  
+  have suite :∀n, ∃ x : Fin n → X, ∀  p , ∀ m > p, d (x p ) (x m ) >= α := by
+    intro n 
+
+    induction n with
+    | zero => simp -- pour n=0,  Fin n = ∅ donc pour n'importe quelle suite x, la conclusion est trivialement vérifiée ∀ m,p ∈ ∅, 
+    
+    --l'hypothese de reccurence nous donne une suite x: Fin n -> X, défini pour t< n, on la complète avec le terme x n = un par h
+    | succ n ih => 
+      obtain ⟨ x, hx ⟩ := ih 
+      specialize h n x 
+      obtain ⟨ un, hun⟩ := h
+      let x' :  Fin (Nat.succ n) → X := λt ↦ if h: t < n then x ⟨ t.val, h⟩  else un
+      use x' 
+
+      --il faut alors montrer que la suite obtenu convient
+      intro p m hpm 
+
+      have ip : p < n := lt_of_lt_of_le hpm (Nat.le_of_lt_succ m.2)
+      have im : m < n ∨ ↑m =n := lt_or_eq_of_le (Nat.le_of_lt_succ m.2 )  
+
+      have egp : x' p = if (p < n) then x ⟨p.val, ip⟩ else un := rfl
+      rw [if_pos ip ]at egp -- ceci prouve que x'(p)=x(p)
+
+      cases im with -- mais pour prouver que x'(m)=x(m) il faut faire une disonction de cas, m < n ou m =n
+
+      | inl hm1 =>  --cas m < n
+        specialize hx ⟨ p.val , ip⟩ ⟨ m.val, hm1⟩ hpm 
+        have egm : x' m = if (m < n) then x ⟨m.val, hm1⟩ else un := rfl
+        rw [if_pos hm1 ]at egm --ceci prouve que x'(m)=x(m)
+        rw [<- egp, <- egm] at hx
+        exact hx
+        -- ce cas se prouve donc simplement par les égalités x'(m)=x(m) , x'(p)=x(p) puis l'hypoyhèse de recurrence hx 
+
+      | inr hm2 => -- cas m = n
+        have eg_un: x' m = if h:(m < n) then x ⟨m.val, h ⟩ else un := rfl -- on reprend la définition de x'
+        have neg : ¬(m<n) := not_lt_of_ge (((le_antisymm_iff).mp hm2).2) 
+        have hx': x' ⟨m, (Nat.lt_succ).mpr ((le_antisymm_iff).mp hm2).1⟩  = un := by simp [eg_un, neg] --ceci prouve que x'(m)=un
+        rw [egp, hx' ] -- montrer que d(x'm,x'p) ≥ α revient donc à montrer que d(un, x p)≥ α
+        have union: ¬∃ i, un ∈ ⋃ (_ : i ∈ List.ofFn x), B(i,α) := (Iff.not Set.mem_iUnion ).mp hun.2
+        push_neg at union
+        simp at union --
+        apply union (x ⟨ p, ip ⟩)
+        exact 
+      -- ce cas se vérifie donc par la propriété de non appartenance a une union, donc a chaque boule de l'union, en particulier cette propriété est vrai pour la boule de centre x(p)
+    
+    --donc ∀ n, il existe n premiers termes d'une suite dont tous les termes sont a distance ≥ α les uns des autres, donc c'est vrai pour une infinité de termes
+  
+  -- il reste à montrer que cette suite n'admet pas de valeurs d'adhérence
+        
+sorry
+
+        
+
+
+--(e) Continuite uniforme  
+
+
+
