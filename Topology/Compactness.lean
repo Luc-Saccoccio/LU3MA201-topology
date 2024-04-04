@@ -2,6 +2,8 @@ import Topology.Basic
 
 universe u v w
 
+open MetricSpace
+
 -- III Compacité
 -- 1. théorie
 
@@ -115,7 +117,7 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
     rw [Function.comp_apply] at hN
     rw [<- eg] at hN
     exact hN
-    
+
   exact  lim_xf
   exact h_closed
 
@@ -125,21 +127,21 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
   intro x
   let x' : ℕ → X := λ n ↦ x n
   obtain ⟨ f, l, hf,limite⟩ := hX x'
-  use f 
+  use f
   have eg : ∀ n , x n = x' n:= by
     intro n
     rfl
   have limite2 : lim (x ∘ f) l := by
-    intro ε hε 
-    obtain ⟨ N , hN⟩ := limite ε hε 
-    use N 
+    intro ε hε
+    obtain ⟨ N , hN⟩ := limite ε hε
+    use N
     intro n hn
     specialize hN n hn
     rw [Function.comp_apply]
     rw [Function.comp_apply] at hN
     rw [eg]
     exact hN
-  have hl :l ∈ Closure K  := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩ 
+  have hl :l ∈ Closure K  := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩
   rw [closure_closed_is_closed hK] at hl
   use l
 
@@ -147,9 +149,9 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 
 -- est ce que Luc peut s'occuper de ce lemme?
 lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim' x x₀ →  lim' ( f ∘ x ) (f x₀ ):= by
-  
+
   apply Iff.intro
-  · intro H x l ε hε 
+  · intro H x l ε hε
     sorry
 
   · sorry
@@ -170,7 +172,7 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
   let x' : ℕ → Set.univ := λ n ↦ ⟨x n, (hx n).1 ⟩  -- ceci permet d'appliquer la définition de la compacité à x' à valeurs dans Set.univ au lieu de X
   obtain ⟨ j, l, _, croiss_j,lim_in_univ⟩ := univ_compact x'
 
-  use j, (f l) 
+  use j, (f l)
 
   have hf : ∀ (t : X), f t ∈ f '' Set.univ := by
     intro t
@@ -179,21 +181,21 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
     apply And.intro
     exact Set.mem_univ t
     rfl
-    
+
   apply And.intro
-  exact hf l 
+  exact hf l
   apply And.intro
   exact croiss_j
 
 -- la dernière proposition du goal se montre en plusieurs étapes
   have limite : lim' (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim' car f prend ses antécédents dans X, donc on ne peut la composer qu'avec x qui est a valeur dans X
     apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
-    intro ε hε 
+    intro ε hε
     obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
-    use N 
-    have eg : ∀ n, x n = x' n := by  
-      intro n 
-      rfl 
+    use N
+    have eg : ∀ n, x n = x' n := by
+      intro n
+      rfl
     intro n
     rw [Function.comp_apply]
     rw[eg (j n)]
@@ -207,12 +209,12 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
   rw [Function.comp_apply]
   rw [←  (hx (j n)).2]
   specialize hN n hn
-  rw [ Function.comp_apply] at hN 
+  rw [ Function.comp_apply] at hN
   exact hN
 
-  
 
-  
+
+
 -- je n'ai pas su formuler les deux définitions qui suivent, la première est une application qui prend en entrée une fonction bijective et renvoit son inverse
 
 --def inverse  ( f: X → Y )  (h2: Function.Bijective f ):=
@@ -230,9 +232,9 @@ def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥
 def Complet (K : Type v) [MetricSpace K] := ∀ u : ℕ → K, CauchySeq u → ∃ l : K, lim' u l  -- j'ai repris la def de Charles, pourquoi type v au lieu de type u? il semnle que ça ne change rien
 
 lemma Cauchy_val_adherence_conv (u : ℕ → X) (l : X) (f : ℕ → ℕ) (h1 : strictement_croissante f) (h2 : lim' (u∘f) l) (h3 :  CauchySeq u): lim' u l := by
-  intro ε hε 
-  specialize h3 (ε/2) (half_pos hε) 
-  specialize h2 (ε/2) (half_pos hε) 
+  intro ε hε
+  specialize h3 (ε/2) (half_pos hε)
+  specialize h2 (ε/2) (half_pos hε)
   obtain ⟨ N1, hN1 ⟩ := h2
   obtain ⟨ N2, hN2 ⟩ := h3
   use Nat.max N1 N2
@@ -242,20 +244,20 @@ lemma Cauchy_val_adherence_conv (u : ℕ → X) (l : X) (f : ℕ → ℕ) (h1 : 
   have ineq2: Nat.max N1 N2 ≥ N2 := Nat.le_max_right  N1 N2
 
   specialize hN1 n (le_trans ineq1 hn )
-  specialize hN2 n (le_trans ineq2 hn )  
+  specialize hN2 n (le_trans ineq2 hn )
   specialize hN2 (f n) ( le_trans (le_trans ineq2 hn )  (stricte_croissance_geq f h1 n)  )
   rw [Function.comp_apply] at hN1
   rw [dist_symm] at hN2
 
   linarith
-  
+
 
 
 lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K := by
-  intro h x hx 
-  obtain ⟨ f, l, croiss_f,lim_l⟩ := h x  
+  intro h x hx
+  obtain ⟨ f, l, croiss_f,lim_l⟩ := h x
   use l
-  apply Cauchy_val_adherence_conv x l f hf lim_l hx 
+  apply Cauchy_val_adherence_conv x l f croiss_f lim_l hx
 
 
 --(d) Compacite et recouvrements
@@ -274,26 +276,26 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
   unfold Compact
   push_neg
 
-  --on construit une suite x par récurence sur n  
+  --on construit une suite x par récurence sur n
   have suite :∀n, ∃ x : Fin n → X, ∀  p , ∀ m > p, d (x p ) (x m ) >= α := by
-    intro n 
+    intro n
 
     induction n with
-    | zero => simp -- pour n=0,  Fin n = ∅ donc pour n'importe quelle suite x, la conclusion est trivialement vérifiée ∀ m,p ∈ ∅, 
-    
+    | zero => simp -- pour n=0,  Fin n = ∅ donc pour n'importe quelle suite x, la conclusion est trivialement vérifiée ∀ m,p ∈ ∅,
+
     --l'hypothese de reccurence nous donne une suite x: Fin n -> X, défini pour t< n, on la complète avec le terme x n = un par h
-    | succ n ih => 
-      obtain ⟨ x, hx ⟩ := ih 
-      specialize h n x 
+    | succ n ih =>
+      obtain ⟨ x, hx ⟩ := ih
+      specialize h n x
       obtain ⟨ un, hun⟩ := h
       let x' :  Fin (Nat.succ n) → X := λt ↦ if h: t < n then x ⟨ t.val, h⟩  else un
-      use x' 
+      use x'
 
       --il faut alors montrer que la suite obtenu convient
-      intro p m hpm 
+      intro p m hpm
 
       have ip : p < n := lt_of_lt_of_le hpm (Nat.le_of_lt_succ m.2)
-      have im : m < n ∨ ↑m =n := lt_or_eq_of_le (Nat.le_of_lt_succ m.2 )  
+      have im : m < n ∨ ↑m =n := lt_or_eq_of_le (Nat.le_of_lt_succ m.2 )
 
       have egp : x' p = if (p < n) then x ⟨p.val, ip⟩ else un := rfl
       rw [if_pos ip ]at egp -- ceci prouve que x'(p)=x(p)
@@ -301,35 +303,35 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
       cases im with -- mais pour prouver que x'(m)=x(m) il faut faire une disonction de cas, m < n ou m =n
 
       | inl hm1 =>  --cas m < n
-        specialize hx ⟨ p.val , ip⟩ ⟨ m.val, hm1⟩ hpm 
+        specialize hx ⟨ p.val , ip⟩ ⟨ m.val, hm1⟩ hpm
         have egm : x' m = if (m < n) then x ⟨m.val, hm1⟩ else un := rfl
         rw [if_pos hm1 ]at egm --ceci prouve que x'(m)=x(m)
         rw [<- egp, <- egm] at hx
         exact hx
-        -- ce cas se prouve donc simplement par les égalités x'(m)=x(m) , x'(p)=x(p) puis l'hypoyhèse de recurrence hx 
+        -- ce cas se prouve donc simplement par les égalités x'(m)=x(m) , x'(p)=x(p) puis l'hypoyhèse de recurrence hx
 
       | inr hm2 => -- cas m = n
         have eg_un: x' m = if h:(m < n) then x ⟨m.val, h ⟩ else un := rfl -- on reprend la définition de x'
-        have neg : ¬(m<n) := not_lt_of_ge (((le_antisymm_iff).mp hm2).2) 
+        have neg : ¬(m<n) := not_lt_of_ge (((le_antisymm_iff).mp hm2).2)
         have hx': x' ⟨m, (Nat.lt_succ).mpr ((le_antisymm_iff).mp hm2).1⟩  = un := by simp [eg_un, neg] --ceci prouve que x'(m)=un
         rw [egp, hx' ] -- montrer que d(x'm,x'p) ≥ α revient donc à montrer que d(un, x p)≥ α
         have union: ¬∃ i, un ∈ ⋃ (_ : i ∈ List.ofFn x), B(i,α) := (Iff.not Set.mem_iUnion ).mp hun.2
         push_neg at union
         simp at union --
         apply union (x ⟨ p, ip ⟩)
-        exact 
+        exact
       -- ce cas se vérifie donc par la propriété de non appartenance a une union, donc a chaque boule de l'union, en particulier cette propriété est vrai pour la boule de centre x(p)
-    
+
     --donc ∀ n, il existe n premiers termes d'une suite dont tous les termes sont a distance ≥ α les uns des autres, donc c'est vrai pour une infinité de termes
-  
+
   -- il reste à montrer que cette suite n'admet pas de valeurs d'adhérence
-        
+
 sorry
 
-        
 
 
---(e) Continuite uniforme  
+
+--(e) Continuite uniforme
 
 
 
