@@ -147,8 +147,51 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 
 
 
--- est ce que Luc peut s'occuper de ce lemme?
+
 lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim' x x₀ →  lim' ( f ∘ x ) (f x₀ ):= by
+  
+  apply Iff.intro
+  · intro H x l ε hε 
+    specialize H ε hε 
+    obtain ⟨ δ, hδ, continu ⟩ := H
+    obtain ⟨ N, hN⟩ := l δ hδ 
+    use N
+    intro n hn
+    specialize hN n hn
+    specialize continu (x n)
+    apply continu
+    exact hN
+  
+
+  · contrapose
+    intro h 
+    unfold continuous_on at h
+    push_neg at h
+    push_neg
+    obtain ⟨ ε, hε, H ⟩ := h
+    unfold lim'
+    let δ : ℕ → ℝ := λ n ↦ 1/n
+    have δ_pos: ∀n, δ n > 0:= sorry -- voir dans mathlib 1/n > 0
+    have suite: ∀ n:ℕ, ∃ xn, d_[X] x₀ xn < (δ n) ∧ ε ≤ d_[Y] (f x₀) (f xn):= by
+      intro n
+      exact H ( δ n ) (δ_pos n)
+    choose x hx using suite
+    use x  
+    apply And.intro
+    · intro e he
+      have hl: ∃ N, ∀ n ≥ N, δ n < e:= by sorry 
+        -- use N en posant N= [e] + 1, voir dans mathlib notation partie entière
+      obtain ⟨ N, hN⟩ := hl
+      use N
+      intro n hn
+      exact lt_trans (hx n).1 (hN n hn )
+
+    · push_neg
+      use ε, hε 
+      intro N
+      use N, le_rfl
+      apply (hx N).2 
+
 
   apply Iff.intro
   · intro H x l ε hε
