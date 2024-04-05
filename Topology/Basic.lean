@@ -144,11 +144,48 @@ theorem topologic_continuity (f : X → Y) : Continuous f ↔ (∀ U, is_open U 
       let U : Set Y := B(f x₀, ε)
       have U_open := open_ball_is_open (f x₀) ε ε_pos
       have recU_open := H₁ U U_open
+      have f_in : f x₀ ∈  B(f x₀, ε) := by  --j'ai rajouté cette hypothèse pour que la tactique simpa fonctionne
+        simp
+        exact ε_pos
       have x_in_recU: x₀ ∈ f⁻¹' U := by simpa
       obtain ⟨δ, δ_pos, H₂⟩ : ∃ δ > 0, B(x₀, δ) ⊆ f⁻¹' U := recU_open x₀ x_in_recU
       use δ, δ_pos
       intro x hx
       exact H₂ hx
+
+-- j'ai cru avoir besoin de ce lemme pour prouver le critère de continuité séquentielle, mais finalement je l'ai fait sans
+lemma topologic_continuity_on (x₀ : X) (f : X → Y) : continuous_on f x₀ ↔ (∀ U, is_open U ∧  f x₀ ∈ U → ∃ V, is_open V ∧ x₀∈ V ∧ V ⊆  (f ⁻¹' U)) := by
+  apply Iff.intro
+  · intro h U hU 
+    obtain ⟨ε, ε_pos, ball_in_U⟩ : ∃ ε > 0, B(f x₀, ε) ⊆ U := hU.1 (f x₀) hU.2
+    rcases (h ) ε ε_pos with ⟨δ, δ_pos, H⟩
+    use B(x₀, δ) 
+    apply And.intro
+    apply open_ball_is_open x₀ δ δ_pos
+    apply And.intro
+    simp
+    exact δ_pos
+    intro x hx
+    suffices hh : f x ∈ B(f x₀, ε) from ball_in_U hh
+    exact H x hx
+
+  · intro H₁ ε ε_pos
+    have U_open := open_ball_is_open (f x₀) ε ε_pos
+    have h : is_open  B(f x₀, ε) ∧ f x₀ ∈  B(f x₀, ε)  := by 
+      apply And.intro
+      · exact U_open
+      · simp 
+        exact ε_pos
+    have recU_open := H₁ B(f x₀, ε) h
+    let U : Set Y := B(f x₀, ε)
+    obtain ⟨ V , hV⟩ := recU_open
+    unfold is_open at hV 
+    obtain ⟨δ, δ_pos, H₂⟩ : ∃ δ > 0, B(x₀, δ) ⊆ V := (hV.1) x₀ hV.2.1
+    have H₃: B(x₀, δ) ⊆ f⁻¹' U := by 
+      exact subset_trans H₂ hV.2.2
+    use δ, δ_pos
+    intro x hx
+    exact H₃ hx
 
 variable {Z : Type u} [MetricSpace Z]
 
