@@ -148,6 +148,8 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 
 
 
+
+
 lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔   ∀ (x : ℕ → X) , lim' x x₀ →  lim' ( f ∘ x ) (f x₀ ):= by
   
   apply Iff.intro
@@ -170,17 +172,22 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
     push_neg
     obtain ⟨ ε, hε, H ⟩ := h
     unfold lim'
-    let δ : ℕ → ℝ := λ n ↦ 1/n
-    have δ_pos: ∀n, δ n > 0:= sorry -- voir dans mathlib 1/n > 0
+    let δ : ℕ → ℝ := λ n ↦ 1/ ( n + 1)
+    have δ_pos: ∀n, δ n > 0:= by 
+      intro n
+      apply one_div_pos.mpr
+      norm_cast
+      apply Nat.zero_lt_succ n
     have suite: ∀ n:ℕ, ∃ xn, d_[X] x₀ xn < (δ n) ∧ ε ≤ d_[Y] (f x₀) (f xn):= by
       intro n
       exact H ( δ n ) (δ_pos n)
     choose x hx using suite
     use x  
+    
     apply And.intro
     · intro e he
       have hl: ∃ N, ∀ n ≥ N, δ n < e:= by sorry 
-        -- use N en posant N= [e] + 1, voir dans mathlib notation partie entière
+        -- use N en posant N= 1/[e], voir dans mathlib notation partie entière
       obtain ⟨ N, hN⟩ := hl
       use N
       intro n hn
@@ -191,13 +198,6 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
       intro N
       use N, le_rfl
       apply (hx N).2 
-
-
-  apply Iff.intro
-  · intro H x l ε hε
-    sorry
-
-  · sorry
 
 
 lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (Set.univ : Set X)) : is_compact (Set.image f Set.univ) := by
