@@ -187,7 +187,7 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
     apply And.intro
     · intro e he
       have hl: ∃ N, ∀ n ≥ N, δ n < e:= by sorry 
-        -- use N en posant N= 1/[e], voir dans mathlib notation partie entière
+        -- use N en posant N= [1/e], voir dans mathlib notation partie entière
       obtain ⟨ N, hN⟩ := hl
       use N
       intro n hn
