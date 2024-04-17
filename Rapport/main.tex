@@ -225,6 +225,107 @@ La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hyp
 
 \subsection{Compacité}
 
+\subsubsection{Définition}
+
+\begin{minted}{lean}
+
+variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
+
+\end{minted}
+
+On introduit deux espaces métriques $(X,d_{X})$ et  $(Y,d_{Y})$ grâce à la tactique \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera  $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$ .
+
+D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant voici quelque lemmes et définitions préliminaires. 
+
+\begin{minted}{lean}
+def strictement_croissante (f : ℕ → ℕ ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
+
+def croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n >= m → f n >= f m
+
+\end{minted}
+
+\lean{croissante} et \lean{stricte_croissante} sont les définitions respectives de la croissance et stricte croissance d'une fonction de $\mathbb{N}$ dans $\mathbb{N}$. Ensuite le lemme \lean{stricte_croissante_to_croissante} prouve qu'une fonction strictement croissante est croissante:
+
+\begin{minted}{lean}
+lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissante f → croissante f :=
+  by
+    intro hf n m hnm
+    apply Or.elim (Nat.eq_or_lt_of_le hnm)
+    . exact Nat.le_of_eq ∘ congrArg f
+    . exact Nat.le_of_lt ∘ hf n m
+    
+\end{minted}
+
+
+
+Cette preuve consiste en l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. 
+Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $ \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas. Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}
+
+
+
+Enfin voici le lemme \lean{stricte_croissance_geq} qui nous servira également pour la suite:
+
+\begin{minted}{lean}
+
+lemma stricte_croissance_geq (f : \Nat → \Nat) : strictement_croissante f → ∀ n : ℕ, f n >= n :=
+  by
+    intro h n
+    induction' n with n hi
+    . exact Nat.zero_le (f 0)
+    . exact Nat.succ_le_of_lt ∘ Nat.lt_of_le_of_lt hi \textdollar h (n + 1) n (Nat.lt_succ_self n)
+\end{minted}   
+    
+
+Nous pouvons à présent prouver que si une suite converge alors toute suite extraite converge vers la même limite:    
+
+\begin{minted}{lean}    
+    
+
+lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim  x l ∧ strictement_croissante f -> lim  (x ∘ f) l :=
+  by
+    rintro ⟨hx, hf⟩ ε hε
+    obtain ⟨N, hN ⟩ := hx ε hε
+    use N
+    intro n hn
+    have t : f n >= f N := stricte_croissante_to_croissante f hf n N hn
+    apply hN
+    have sup_N: f N >= N := stricte_croissance_geq f hf N
+    linarith [t, stricte_croissance_geq f]
+    
+\end{minted}
+
+Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après l'expression du but qui commence par le quantificateur $\forall$ (voir définition de lim). Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}. Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. on introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. On nomme \lean{t} la proposition \lean{stricte_croissante_to_croissante} démontrée précédemment et appliquée à \lean{f} et \lean{hf}, nous donne la croissance de \lean{f}, puis la définition de la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé t par la tactique have. De même, \lean{ stricte_croissance_geq} appliqué à \lean{f}, \lean{hf} et \lean{N} nous donne la propriété que nous avons nommée\lean{sup_N}. Enfin, par combinaison linéaire de ces deux dernières hypothèses,la tactique \lean{linarith} résout automatiquement le but.
+
+\begin{minted}{lean}
+def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ]:= ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+\end{minted}
+
+Cette définition de la limite prend en argument une suite \lean{x} de $\mathbb{N}$ dans $\alpha$, un type quelquonc de l'univers \lean{u} à partir duquel on construit un espace metrique grace à la syntaxe \lean{[MetricSpace α  ]}. \lean{lim'} prend en second argument un élément de $\alpha$, puis elle defini la convergence de la suite \lean{x} vers cet élément.
+
+Nous pouvons à présent définir un espace métrique compact:
+
+\begin{minted}{lean}
+
+def Compact (K : Type u) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
+\end{minted}
+
+Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément  \lean{l} vers lequel la fonction composée converge.
+
+\begin{minted}{lean}
+def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
+
+\end{minted}
+
+Une partie d'un espace métrique est compact si le sous-espace métrique correspondant est compact. Etant donné que la distance se conserve pour tout sous-espace métrique, il n'est pas nécessaire de définir explicitement un nouvel espace métrique. Une partie \lean{K} de \lean{X} est un type de \lean{Set X} et tout élément de  \lean{K} est effectivement un type de \lean{X}. Ainsi  \lean{K} conserve les propriétées de \lean{X}. Il suffit donc d'ajuster la définition précédente en remplaçant \lean{∀ x : ℕ → X} par \lean{∀ x : ℕ → K}, ainsi que \lean{lim'} par \lean{lim}. En effet, \lean{lim} prend en argument une suite à valeur dans un type de \lean{Set X} et \lean{lim'} ne conviend qu'à une suite à valeurs dans \lean{X}.
+
+\subsubsection{Compacité et fermeture}
+\subsubsection{Compacité et continuité}
+\subsubsection{Compacité et complétude}
+\subsubsection{Compacité et recouvrements}
+
+\end{document}
+
+
 \subsection{Connexité}
 
 \newpage
