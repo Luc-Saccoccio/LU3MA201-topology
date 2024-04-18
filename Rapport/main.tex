@@ -223,6 +223,116 @@ La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hyp
 
 \subsection{Complétude}
 
+La complétude nécessite un certain nombre de définitions , telles que les suites de Cauchy, la caracetrisation séquentielle de la fermeture par exemple.
+
+La premiere chose a définir est une suite de Cauchy : 
+\begin{minted}{lean}
+def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥ N,  d (u m) (u n) < ε
+\end{minted}
+
+On rappelle que " d " est la distance definit plus haut.
+
+ Le lemme suivant est assez simple dans le raisonnement. Il m' a aidé dans la prise en main et la comprehesion de Lean. 
+
+\begin{minted}{lean}
+theorem Converg_Cauchy (u : ℕ → X) : Converg u → CauchySeq u :=
+  by
+    intro ⟨l, hl⟩
+    intro ε ε_pos
+    have Hε : 0 < ε / 2 := by linarith
+    obtain ⟨N, hN⟩ := hl ε/2
+    use N
+    intro m hm
+    intro n hn
+    have hd : d (u n) (u m) ≤ d (u n) l + d l (u m) := dist_triangle
+    have h₁ : d (u n) l < ε/2 := @dist_symm X _ _ _ ▸ hN n hn
+    have h₂ : d (u m) l < ε/2 := @dist_symm X _ _ _ ▸ hN m hm
+    have hε := add_lt_add h₁ h₂
+    have h : d (u n) (u m) < ε/2 + ε/2 := lt_trans hd hε
+    have E : ε/2 + ε/2 = ε := by linarith
+    have H : d (u n) (u m) < ε
+    
+\end{minted}
+
+Il s agit de la preuve qu une suite de cauchy est convergente.
+L' instruction " intro ⟨l, hl⟩ "  introduit  l hypothèse de convergence en utilisant l existance de la limite  " l "  ainsi que en la notant hl.  Nous disposons maintenant de l énoncé general :  $$ \forall  \varepsilon \ge 0 \exists N \in \mathbb{N},\forall n \geq N, d (u n) ( l ) < \varepsilon$$  . Nous introduisons donc la  quantité $\varepsilon$ que nous divisons par 2 dans l hypothese He pour la suite de la preuve. 
+Grace a l hypothese, nous avons un N entier appliqué a cet  $\varepsilon$/2  par " obtain ⟨N, hN⟩ := hl ε/2 hl "
+ qui est utilisé avec " use N". 
+ On invoque un n et m > N pour con
+ tinuer de parcourir l hypothése pour arriver au coeur de la preuve de ce lemme.
+
+ Nous avons besoin de deux énoncés :
+                - hd qui consiste a montrer que " d (u n) (u m) ≤ d (u n) l + d l (u m) " par l inegalité triangulaire
+                -  h1 et h2 utilisent l hypothese de convergence appliquée respectivement au n et m et $\varepsilon$/2
+    les énoncés he et h condensent les inégalités precédentes avec successivement \\
+        - $a \leq b $ et $ c\leq d$ \implies $ a+b \leq c+d$ ( add_lt_add )  \\ 
+        - $a \leq b $ et $ b \leq c $ \implies $ a\leq c$ ( lt_trans )  appliquée a hd et he\\ 
+
+Il ne nous reste plus qu'à préciser a lean que  " ε/2 + ε/2 = ε " grace a la tactic linarith pour finaliser la preuve. \\ 
+
+
+Le second lemme est le caractère bornée des suites de Cauchy :
+
+\begin{minted}{lean}
+
+lemma Cauchy_borne ( u : ℕ → X ) : (h : CauchySeq u ) → Bornee u := by
+
+    unfold CauchySeq
+    unfold Bornee
+    intro h
+    specialize h ( 1: ℝ )
+    have h1 : (1:ℝ) >0 := by
+      simp
+    specialize h h1
+    obtain ⟨N, hN⟩ := h
+    have fintype.D := { d (u N) (u n) | n : Fin (N-1)} 
+    -- have M := D.max
+    intro n
+    
+\end{minted}
+
+La tactique unfold déploit les defintions de CauchySeq et Bornee dans les hypothèses et le goal. 
+Nous introduisons l hypothèse h qui est le fait que la suite u est de Cauchy. Le début de h étant une généralité, nous spécialisons le epsilon en 1 pour faciliter la preuve.  ( En effet, sans spécifier le epsilon choisit, il faudrait utiliser l axiome du choix  ). L'énonce h1 montre que 1 pris dans les réels est bien strictement positif, critère que doit valider tout choix d epsilon. Comme précédemment, la tactique  " obtain ⟨N, hN⟩ " donne le N associé a 1 ( vu comme un epsilon quelconque ) et note hN la suite de l'énoncé : " hN : ∀ m ≥ N, ∀ n ≥ N, d (u m) (u n) < 1 ". La suite de la preuve consiste en la recherche d un majorant M réel a l ensemble des distances possibles entre les termes de la suite et un point x de X. Ici, nous choisissons le N ieme terme de la suite u comme point de reference.
+De deux choses l une: \\ 
+
+        - si $M \geq 1$, M majore alors tous les termes de la suite d (u N) (u n)\\
+        - si $M \leq  1$ , M <- 1 et 1 est un majorant de la suite d (u N) (u n) \\
+        
+On définit  \textbf{$D := { d (u N) (u n) tel que n \leq N-1 }$}, l ensemble des distances entre u(N) et tous les autres termes u d incides inferieurs a N. On note M le max de cet ensemble. 
+Une autre méthode, plus alghorithmique, serait de faire une induction sur n < N : \\
+        - poser M = d (u N) (u 0) puis comparer M aux autres distances. Des que M est depassé par une distance, ce nouveau majorant remplace l ancienne valeur de M. 
+
+Supposons le M obtenu, il reste a majoré les termes d indices superieures a N. Ils le sont dés le depart par l hypothése que la suite est de Cauchy. 
+Le majorant de la suite sera donc le maximum entre M et 1, comme annoncé.
+
+
+Il reste a montrer le théoreme central de ce chapitre : le théoreme du point fixe contractant de Banach picard.
+
+\begin{minted}{lean}
+
+theorem Point_Fixe_Contractant (f : X -> X ) : (Complet X ∧ contractant f ∧ ∀ u :ℕ -> X,  ∀ n , f (u n) = u (Nat.succ n )) -> (∃!x:X,f x =x ∧ lim u x) :=
+  by
+    unfold contractant
+    have C := d ( u 0 ) ( u 1)
+    intro H
+    obtain ⟨k, hk⟩ := H.2
+    
+    have h : ∀ n : ℕ , d (u (Nat.succ n)) (u n) < k^n*C := sorry
+    -- cf exercice 50 du poly de topo
+    
+    have l : ∀ ε>0 ,∃ N , ∀ n > N ,d (u (Nat.succ n)) (u n) < ε := sorry
+    -- preuve que k^n*C tend vers zero puis thm des gendarmes
+    
+    have hp : ∀ n p : ℕ , d (u n) (u (n + p)) < ((k^n)/(1-k))*C := sorry
+    -- IT generalisée et recurrence sur p
+    
+    have lp : ∀ ε>0 ,∃ N ,∀ p  ≥ N,∀ n ≥ N, d (u p) (u n) < ε := sorry
+    -- encore une preuve de convergence vers 0
+    
+    have Cauchy : CauchySeq u := by exact lp
+    have Conv : Converge u := by exact H.1 u Cauchy
+\end{minted}
+
 \subsection{Compacité}
 
 \subsection{Connexité}
