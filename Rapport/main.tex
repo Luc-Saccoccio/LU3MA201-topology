@@ -223,6 +223,7 @@ La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hyp
 
 \subsection{Complétude}
 
+
 \subsection{Compacité}
 
 \subsubsection{Définition}
@@ -294,7 +295,21 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
     
 \end{minted}
 
-Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après l'expression du but qui commence par le quantificateur $\forall$ (voir définition de lim). Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}. Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. on introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. On nomme \lean{t} la proposition \lean{stricte_croissante_to_croissante} démontrée précédemment et appliquée à \lean{f} et \lean{hf}, nous donne la croissance de \lean{f}, puis la définition de la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé t par la tactique have. De même, \lean{ stricte_croissance_geq} appliqué à \lean{f}, \lean{hf} et \lean{N} nous donne la propriété que nous avons nommée\lean{sup_N}. Enfin, par combinaison linéaire de ces deux dernières hypothèses,la tactique \lean{linarith} résout automatiquement le but.
+Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après l'expression du but qui commence par le quantificateur $\forall$ (voir définition de \lean{lim}).
+
+Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}.
+
+Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. 
+
+On introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. 
+
+Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. 
+
+\lean{stricte_croissante_to_croissante} démontrée précédemment appliquée à \lean{f} et \lean{hf} nous donne la croissance de \lean{f}. Puis la définition de la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé t par la tactique have.
+
+De même, \lean{ stricte_croissance_geq} appliqué à \lean{f}, \lean{hf} et \lean{N} nous donne la propriété que nous avons nommée\lean{sup_N}.
+
+Enfin, par combinaison linéaire de ces deux dernières hypothèses,la tactique \lean{linarith} résout automatiquement le but.
 
 \begin{minted}{lean}
 def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ]:= ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
@@ -318,12 +333,130 @@ def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃
 
 Une partie d'un espace métrique est compact si le sous-espace métrique correspondant est compact. Etant donné que la distance se conserve pour tout sous-espace métrique, il n'est pas nécessaire de définir explicitement un nouvel espace métrique. Une partie \lean{K} de \lean{X} est un type de \lean{Set X} et tout élément de  \lean{K} est effectivement un type de \lean{X}. Ainsi  \lean{K} conserve les propriétées de \lean{X}. Il suffit donc d'ajuster la définition précédente en remplaçant \lean{∀ x : ℕ → X} par \lean{∀ x : ℕ → K}, ainsi que \lean{lim'} par \lean{lim}. En effet, \lean{lim} prend en argument une suite à valeur dans un type de \lean{Set X} et \lean{lim'} ne conviend qu'à une suite à valeurs dans \lean{X}.
 
-\subsubsection{Compacité et fermeture}
-\subsubsection{Compacité et continuité}
-\subsubsection{Compacité et complétude}
-\subsubsection{Compacité et recouvrements}
 
-\end{document}
+\subsubsection{Compacité et fermeture}
+Nous démontrerons dans cette partie quelques résultats sur la fermeture.
+
+Tout d'abord, montrons qu'une partie compact de \lean{X} est fermé dans \lean{X}
+
+\begin{minted}{lean}   
+lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K := 
+  by
+    intro K h
+    contrapose! h
+    have diff : Closure K ≠ K := by
+      intro absurde
+      have j : is_closed (Closure K) := by exact closure_is_closed
+      rw [absurde] at j
+      apply h at j
+      exact j
+
+    have c : K ⊂ Closure K :=
+      Set.ssubset_iff_subset_ne.mpr ⟨sub_closure, diff.symm⟩
+    have l_in_closure_not_in_K : ∃ l : X, l ∈ Closure K ∧ l ∉ K :=
+      Set.exists_of_ssubset c
+
+    rcases l_in_closure_not_in_K with ⟨l, l_in_closure, l_not_in_K⟩
+    obtain ⟨x, hx⟩ := (sequential_closure K l).mp l_in_closure
+
+    intro compacite
+    choose f l' hl' hf lim_l' using compacite x
+    have lim_l : lim (x ∘ f) l := limite_suite_extraite K x l f ⟨hx, hf⟩
+    have egalite: l=l':= by apply unicite_limite K (x∘f) l l' lim_l lim_l'
+    rw [egalite] at l_not_in_K
+    apply l_not_in_K at hl'
+    exact hl'
+\end{minted}
+
+Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact, et h l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.
+
+La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et h devient la négation du but précédent.
+
+Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer la propriété prouvée. Par souci de clarté nous détaillerons la preuve de \lean{diff} dans un second temps. Nous ferons de même pour \lean{c : K ⊂ Closure K } puis \lean{l_in_closure_not_in_K}, preuve de l'existence de \lean{l} appartenant à l'adhérence de \lean{K} exclue de \lean{K}. 
+
+\lean{recases} nous permet d'introduire séparément un tel \lean{l} puis les propriétés vérifiées par \lean{l}.
+
+Ensuite par la tactique \lean{obtain}, nous appliquons le lemme \lean{sequential_closure} pour \lean{K} et \lean{l} dans le sens direct (\lean{.mp}).
+
+Ainsi le critère de fermeture séquentielle nous donne l'existence d'une suite de \lean{K} convergente vers \lean{l}. \lean{obtain} nous permet d'introduire une telle suite ainsi que la propriété qu'elle vérifie puis de les nommer respectivement \lean{x} et \lean{hx}.
+
+Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{K} n'est pas compact. 
+
+\lean{K} est supposé compact donc \lean{choose } applique la définition de la compacité à x, et prend alors une suite extraite de \lean{x} qui converge dans \lean{K }vers \lean{l'}, on nomme \lean{hl'} l'hypothèse que \lean{l'} est dans \lean{K}.
+
+Nous prouvons ensuite que cette suite extraite converge vers \lean{l} par le lemme \lean{limite_suite_extraite} démontrée plus haut. Puis nous prouvons que \lean{l=l'} par unicité de la limite. 
+
+La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at l_not_in_K } elle remplace dans \lean{l_not_in_K} le membre de gauche par le membre de droite. Ainsi \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}. 
+
+Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.
+
+Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.
+
+
+
+
+
+\begin{minted}{lean}   
+lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_sub: H  ⊆ K) (h_closed : is_closed H)  : is_compact H := by
+  intro x
+  have x_in_k : ∀ (n : ℕ), (x n : X) ∈ K := by
+    intro n
+    apply Set.mem_of_subset_of_mem h_sub
+    apply (x n).2
+
+  let y : ℕ → K := λ n ↦ ⟨x n, x_in_k n⟩
+  obtain ⟨ f, l, _, croiss_f,lim_in_K⟩ := k_compact y
+
+  have l_in_h : l ∈ Closure H := by apply (sequential_closure H l).mpr  ⟨ x∘f,lim_in_K⟩
+  rw [closure_closed_is_closed] at l_in_h
+  use f,l, l_in_h, croiss_f
+  have eg : ∀ n , x n = (y n :X):= by
+    intro n
+    rfl
+  have lim_xf : lim (x∘f) l := by
+    intro ε hε
+    obtain ⟨ N, hN⟩ := lim_in_K ε hε
+    use N
+    intro n hn
+    specialize hN n hn
+    have eg : x (f n) = (y (f n) : X) := eg (f n)
+    rw [Function.comp_apply]
+    rw [Function.comp_apply] at hN
+    rw [<- eg] at hN
+    exact hN
+    
+  exact  lim_xf
+  exact h_closed
+\end{minted}
+
+% manque détaille
+
+\begin{minted}{lean}
+lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed K) : is_compact K := by
+  intro x
+  let x' : ℕ → X := λ n ↦ x n
+  obtain ⟨ f, l, hf,limite⟩ := hX x'
+  use f 
+  have eg : ∀ n , x n = x' n:= by
+    intro n
+    rfl
+  have limite2 : lim (x ∘ f) l := by
+    intro ε hε 
+    obtain ⟨ N , hN⟩ := limite ε hε 
+    use N 
+    intro n hn
+    specialize hN n hn
+    rw [Function.comp_apply]
+    rw [Function.comp_apply] at hN
+    rw [eg]
+    exact hN
+  have hl :l ∈ Closure K  := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩ 
+  rw [closure_closed_is_closed hK] at hl
+  use l
+\end{minted}
+
+
+% manque détaille
 
 
 \subsection{Connexité}
