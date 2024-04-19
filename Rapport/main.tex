@@ -234,7 +234,7 @@ variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
 
 \end{minted}
 
-On introduit deux espaces métriques $(X,d_{X})$ et  $(Y,d_{Y})$ grâce à la tactique \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera  $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$ .
+On introduit deux espaces métriques $(X,d_{X})$ et  $(Y,d_{Y})$ grâce à la tactique \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera  $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$ .\\
 
 D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant voici quelque lemmes et définitions préliminaires. 
 
@@ -259,8 +259,7 @@ lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissant
 
 
 
-Cette preuve consiste en l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. 
-Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $ \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas. Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}
+Cette preuve consiste en l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $ \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas. Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie que l'égalité des antécédents implique l'égalité des images. Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}\\
 
 
 
@@ -324,7 +323,7 @@ Nous pouvons à présent définir un espace métrique compact:
 def Compact (K : Type u) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
 \end{minted}
 
-Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément  \lean{l} vers lequel la fonction composée converge.
+Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément \lean{l} vers lequel la fonction composée converge.
 
 \begin{minted}{lean}
 def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
@@ -368,9 +367,9 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
     exact hl'
 \end{minted}
 
-Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact, et h l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.
+Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact, et \lean{h} l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.
 
-La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et h devient la négation du but précédent.
+La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et \lean{h} devient la négation du but précédent.
 
 Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer la propriété prouvée. Par souci de clarté nous détaillerons la preuve de \lean{diff} dans un second temps. Nous ferons de même pour \lean{c : K ⊂ Closure K } puis \lean{l_in_closure_not_in_K}, preuve de l'existence de \lean{l} appartenant à l'adhérence de \lean{K} exclue de \lean{K}. 
 
@@ -390,10 +389,20 @@ La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at 
 
 Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.
 
-Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.
+Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.\\
 
 
+Revenons sur l'hypothèse \lean{diff}, le but est la négation d'une égalité, donc la tactique \lean{intro} introduit l'hypothèse de l'égalité et change le but en \lean{False}. Ceci nous permet de résonner par l'absurde. Ensuite, le lemme de la fermeture de l'adhérence appliqué à \lean{K} et nommé \lean{j}.\lean{rw} remplace alors \lean{Closure K} par \lean{K} dans \lean{j}. D'où une contradiction avec \lean{h}. Par conséquent \lean{apply h at j} change \lean{j} en \lean{False}. Encore une fois, \lean{j} est exactement le but, donc \lean{exact j} termine la preuve
 
+L'hypothèse suivante \lean{c} est déduite de \lean{diff} par \lean{Set.ssubset_iff_subset_ne}, un lemme de mathlib utilisé dans le sens indirect (\lean{.mpr}). Il prend en argument \lean{sub_closure}, l'inclusion de tout ensemble dans son adhérence, en particulier pour \lean{K} (argument implicite), puis \lean{diff.symm} où \lean{.symm} permet d'inverser les membres de gauche et de droite.
+
+Enfin l'hypothèse \lean{l_in_closure_not_in_K} est déduite de l'inclusion strict de \lean{c} par le lemme de mathlib \lean{Set.exists_of_ssubse}.\\
+
+
+Les preuves suivantes seront moins détaillées afin d'éviter de trop se répéter, tous les théorèmes utilisés commençant par \lean{Set.},\lean{Fonction.}, et \lean{Nat.}  proviennent de Mathlib.\\
+
+
+Poursuivons avec la proposition que toute partie fermée d'une partie compacte est compacte.
 
 
 \begin{minted}{lean}   
@@ -429,7 +438,21 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact h_closed
 \end{minted}
 
-% manque détaille
+Nous montrons que \lean{H} est compact. Nous prenons donc une suite \lean{x} à valeurs dans \lean{H} et nous montrons l'existence d'une suite extraite convergente.
+
+Pour tout n, montrer que \lean{x n} est dans \lean{K} revient à montrer que \lean{x n} est dans \lean{H}, ceci découle de l'inclusion de \lean{H} dans \lean{K}, nous changeons le but de cette manière par \lean{Set.mem_of_subset_of_mem}. \lean{x n} contient la proposition d'appartenance à \lean{H} en deuxième position, nous appliquons donc \lean{(x n).2}
+
+Par la compacité de\lean{K} nous posons une suite de \lean{K} coincidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.
+
+la limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coincide avec cette dernière.
+
+Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.
+
+Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.
+
+Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x)) $ \\
+
+De façon similaire la preuve suivante montre que toute partie fermée d'un espace compact est compact. Nous adaptons donc la preuve précédente, pour l'hypothèse que \lean{X} est compact.
 
 \begin{minted}{lean}
 lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed K) : is_compact K := by
@@ -455,8 +478,6 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
   use l
 \end{minted}
 
-
-% manque détaille
 
 
 \subsection{Connexité}
