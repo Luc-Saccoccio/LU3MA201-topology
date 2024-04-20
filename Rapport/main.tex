@@ -542,6 +542,20 @@ Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de
 Ainsi, on montre que \lean{lim} coincide trivialement avec \lean{lim'} par une preuve en epsilon.
 
 \subsubsection{Compacité et complétude}
+
+Tout espace métrique compact est complet. Ceci est la dernière proposition de base que nous avons formalisé en Lean avant de définir la compacité de manière topologique.
+
+\begin{minted} {lean}
+lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K := by
+  intro h x hx 
+  obtain ⟨ f, l, hf,lim_l⟩ := h x  
+  use l
+  apply Cauchy_val_adherence_conv x l f hf lim_l hx 
+\end{minted}
+
+La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. On propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
+
+
 \subsubsection{Compacité et recouvrements}
 
 \subsection{Connexité}
