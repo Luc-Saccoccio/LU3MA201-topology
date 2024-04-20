@@ -259,7 +259,21 @@ lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissant
 
 
 
-Cette preuve consiste en l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $ \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas. Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie que l'égalité des antécédents implique l'égalité des images. Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}\\
+\begin{itemize} [  align=left, leftmargin=20pt, itemsep=30pt ]
+    \item[\textbf{intro:}] Cette preuve commence par l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et 
+    \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. 
+
+    \item[\textbf{apply:}] Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit 
+    $\lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas.
+
+    \item[\textbf{exact:}] Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie
+    que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ 
+    n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}. Ainsi dans les deux cas, la tactique \lean{exact} prouve que la propriété 
+    obtenu est exactement celle attendue.
+
+    
+    
+\end{itemize}
 
 
 
