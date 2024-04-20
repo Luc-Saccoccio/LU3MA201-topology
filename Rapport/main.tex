@@ -367,30 +367,42 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
     exact hl'
 \end{minted}
 
-Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact, et \lean{h} l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.
+Afin d'expliquer cette preuve de manière claire et détaillée,  nous la diviserons en plusieurs parties.\\
 
-La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et \lean{h} devient la négation du but précédent.
+\begin{itemize}[itemsep=30pt]
 
-Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer la propriété prouvée. Par souci de clarté nous détaillerons la preuve de \lean{diff} dans un second temps. Nous ferons de même pour \lean{c : K ⊂ Closure K } puis \lean{l_in_closure_not_in_K}, preuve de l'existence de \lean{l} appartenant à l'adhérence de \lean{K} exclue de \lean{K}. 
 
-\lean{recases} nous permet d'introduire séparément un tel \lean{l} puis les propriétés vérifiées par \lean{l}.
+    \item \textbf{Raisonnement par contraposé}\\
+    Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact,
+    et h l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.\\
+    La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et h devient la négation du but précédent.
+    
 
-Ensuite par la tactique \lean{obtain}, nous appliquons le lemme \lean{sequential_closure} pour \lean{K} et \lean{l} dans le sens direct (\lean{.mp}).
+    \item \textbf{Construction d'une suite de \lean{K} convergeant dans \lean{X} exlu de \lean{K} }\\
+    Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer
+    la propriété prouvée. Par souci de clarté nous détaillerons la preuve de \lean{diff} dans un second temps. Nous ferons de même pour \lean{c : K ⊂ Closure K } puis
+    \lean{l_in_closure_not_in_K}, preuve de l'existence de \lean{l} appartenant à l'adhérence de \lean{K} exclue de \lean{K}.\\
+    \lean{recases} nous permet d'introduire séparément un tel \lean{l} puis les propriétés vérifiées par \lean{l}.\\
+    Ensuite par la tactique \lean{obtain}, nous appliquons le lemme \lean{sequential_closure} pour \lean{K} et \lean{l} dans le sens direct (\lean{.mp}).\\
+    Ainsi le critère de fermeture séquentielle nous donne l'existence d'une suite de \lean{K} convergente vers \lean{l}. \lean{obtain} nous permet d'introduire une telle suite ainsi que
+    la propriété qu'elle vérifie puis de les nommer respectivement \lean{x} et \lean{hx}.
 
-Ainsi le critère de fermeture séquentielle nous donne l'existence d'une suite de \lean{K} convergente vers \lean{l}. \lean{obtain} nous permet d'introduire une telle suite ainsi que la propriété qu'elle vérifie puis de les nommer respectivement \lean{x} et \lean{hx}.
 
-Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{K} n'est pas compact. 
+    \item  \textbf{ Preuve que \lean{x} n'admet pas de valeur d'adhérence}\\
+    Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{x},
+    n'admet pas de valeur d'adhérence dans \lean{K}, donc que \lean{K} n'est pas compact. \\
+    \lean{K} est supposé compact donc \lean{choose } applique la définition de la compacité à x, et prend alors une suite extraite de \lean{x} qui converge dans \lean{K }vers \lean{l'},
+    on nomme \lean{hl'} l'hypothèse que \lean{l'} est dans \lean{K}.\\
+    Nous prouvons ensuite que cette suite extraite tend vers \lean{l} par le lemme \lean{limite_suite_extraite} démontrée plus haut. Puis nous prouvons que \lean{l=l'} par unicité de la
+    limite.\\ 
+    La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at l_not_in_K } elle remplace dans \lean{l_not_in_K} le membre de gauche par le membre de droite. Ainsi
+    \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}.\\ 
+    Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.
+    Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.
 
-\lean{K} est supposé compact donc \lean{choose } applique la définition de la compacité à x, et prend alors une suite extraite de \lean{x} qui converge dans \lean{K }vers \lean{l'}, on nomme \lean{hl'} l'hypothèse que \lean{l'} est dans \lean{K}.
+\end{itemize}
 
-Nous prouvons ensuite que cette suite extraite converge vers \lean{l} par le lemme \lean{limite_suite_extraite} démontrée plus haut. Puis nous prouvons que \lean{l=l'} par unicité de la limite. 
-
-La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at l_not_in_K } elle remplace dans \lean{l_not_in_K} le membre de gauche par le membre de droite. Ainsi \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}. 
-
-Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.
-
-Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.\\
-
+\vspace{\baselineskip}
 
 Revenons sur l'hypothèse \lean{diff}, le but est la négation d'une égalité, donc la tactique \lean{intro} introduit l'hypothèse de l'égalité et change le but en \lean{False}. Ceci nous permet de résonner par l'absurde. Ensuite, le lemme de la fermeture de l'adhérence appliqué à \lean{K} et nommé \lean{j}.\lean{rw} remplace alors \lean{Closure K} par \lean{K} dans \lean{j}. D'où une contradiction avec \lean{h}. Par conséquent \lean{apply h at j} change \lean{j} en \lean{False}. Encore une fois, \lean{j} est exactement le but, donc \lean{exact j} termine la preuve
 
@@ -553,7 +565,7 @@ lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K :
   apply Cauchy_val_adherence_conv x l f hf lim_l hx 
 \end{minted}
 
-La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. On propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
+La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. \lean{use} propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
 
 
 \subsubsection{Compacité et recouvrements}
