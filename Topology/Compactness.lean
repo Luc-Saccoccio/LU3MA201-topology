@@ -217,16 +217,16 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_co
 
   use j, (f l) 
 
-  have hf : ∀ (t : X), f t ∈ f '' Set.univ := by
-    intro t
-    apply (Set.mem_image f Set.univ ( f t)).mpr
-    use t
+  have hf :  f l ∈ f '' Set.univ := by
+    
+    apply (Set.mem_image f Set.univ ( f l)).mpr
+    use l
     apply And.intro
-    exact Set.mem_univ t
+    exact Set.mem_univ l
     rfl
     
   apply And.intro
-  exact hf l 
+  exact hf 
   apply And.intro
   exact croiss_j
 
