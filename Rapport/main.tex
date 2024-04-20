@@ -479,6 +479,70 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 \end{minted}
 
 
+\subsubsection{Compacité et continuité}
+
+L'image d'un compact par une fonction continue est compact. En voici la preuve formalisée en lean.
+
+\begin{minted} {lean}
+lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_compact : Compact  X) : is_compact (Set.image f Set.univ) := by
+
+  intro y
+  have hn : ∀ n, ∃ xn ∈ Set.univ, f (xn ) = y n := by
+    intro n
+    exact ( (Set.mem_image f Set.univ ( y n)).mp (y n).2 )
+
+  choose x hx using hn
+  obtain ⟨ j, l, croiss_j,lim_in_univ⟩ := h_compact x
+  use j, (f l) 
+
+  have hf :  f l ∈ f '' Set.univ := by   
+    apply (Set.mem_image f Set.univ ( f l)).mpr
+    use l
+    apply And.intro
+    exact Set.mem_univ l
+    rfl
+    
+  apply And.intro
+  exact hf 
+  apply And.intro
+  exact croiss_j
+
+  have limite : lim' (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim' car f prend ses antécédents dans X
+    apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
+    intro ε hε 
+    obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
+    use N 
+
+  intro ε hε
+  obtain ⟨ N, hN ⟩ :=  limite ε hε
+  use N
+  intro n hn
+  rw [Function.comp_apply]
+  rw [←  (hx (j n)).2]
+  specialize hN n hn
+  rw [ Function.comp_apply] at hN 
+  exact hN
+
+\end{minted}
+
+Dans cette preuve \lean{Set.univ} désigne l'ensemble des éléments de \lean{X} et est un type de \lean{Set X}. \lean{Set.image} désigne l'image par \lean{f} d'un type de \lean{Set X}. Donc \lean{Set.image} ne peux pas prendre \lean{X} en argument. On prendra donc l'image de \lean{Set.univ}.
+
+Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{(Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.
+
+La tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.
+
+La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.
+
+On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriétée est vrai pour tout élément de \lean{X}. 
+
+avant d'appliquer cette propriétée, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. 
+
+Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.
+
+Ainsi, on montre que \lean{lim} coincide trivialement avec \lean{lim'} par une preuve en epsilon.
+
+\subsection{Compacité et complétude}
+\subsection{Compacité et recouvrements}
 
 \subsection{Connexité}
 
