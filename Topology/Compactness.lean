@@ -200,22 +200,22 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
       apply (hx N).2 
 
 
-lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ_compact : is_compact (Set.univ : Set X)) : is_compact (Set.image f Set.univ) := by
+ 
 
+  
+lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_compact : Compact  X) : is_compact (Set.image f Set.univ) := by
 -- is_compact prend un argument de type Set X, de même Set.image prend en argument f et un objet de type Set X, on utilise donc Set.univ quand on ne peut pas utiliser X directement
--- je fait de jongler entre ces deux types a un peu alourdi la preuve qui suit
-
+-- concilier ces deux types a alourdi la preuve
   intro y
   have hn : ∀ n, ∃ xn ∈ Set.univ, f (xn ) = y n := by
     intro n
     exact ( (Set.mem_image f Set.univ ( y n)).mp (y n).2 )
 
   choose x hx using hn
+  
+  obtain ⟨ j, l, croiss_j,lim_in_univ⟩ := h_compact x
 
-  let x' : ℕ → Set.univ := λ n ↦ ⟨x n, (hx n).1 ⟩  -- ceci permet d'appliquer la définition de la compacité à x' à valeurs dans Set.univ au lieu de X
-  obtain ⟨ j, l, _, croiss_j,lim_in_univ⟩ := univ_compact x'
-
-  use j, (f l)
+  use j, (f l) 
 
   have hf : ∀ (t : X), f t ∈ f '' Set.univ := by
     intro t
@@ -224,25 +224,18 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
     apply And.intro
     exact Set.mem_univ t
     rfl
-
+    
   apply And.intro
-  exact hf l
+  exact hf l 
   apply And.intro
   exact croiss_j
 
 -- la dernière proposition du goal se montre en plusieurs étapes
   have limite : lim' (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim' car f prend ses antécédents dans X, donc on ne peut la composer qu'avec x qui est a valeur dans X
     apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
-    intro ε hε
+    intro ε hε 
     obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
-    use N
-    have eg : ∀ n, x n = x' n := by
-      intro n
-      rfl
-    intro n
-    rw [Function.comp_apply]
-    rw[eg (j n)]
-    exact hN n
+    use N 
 
   --en revenant aux ε on montre facilement que lim' et lim sont équivalentes
   intro ε hε
@@ -252,9 +245,8 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (univ
   rw [Function.comp_apply]
   rw [←  (hx (j n)).2]
   specialize hN n hn
-  rw [ Function.comp_apply] at hN
+  rw [ Function.comp_apply] at hN 
   exact hN
-
 
 
 
