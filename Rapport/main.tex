@@ -236,9 +236,9 @@ variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
 
 On introduit deux espaces métriques $(X,d_{X})$ et  $(Y,d_{Y})$ grâce à la tactique \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera  $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$ .\\
 
-D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant voici quelque lemmes et définitions préliminaires. 
+D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant, voici quelque lemmes et définitions préliminaires. 
 
-\begin{minted}{lean}
+\begin{minted}[breaklines]{lean}
 def strictement_croissante (f : ℕ → ℕ ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
 
 def croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n >= m → f n >= f m
@@ -247,7 +247,7 @@ def croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n >= m → f n >= f m
 
 \lean{croissante} et \lean{stricte_croissante} sont les définitions respectives de la croissance et stricte croissance d'une fonction de $\mathbb{N}$ dans $\mathbb{N}$. Ensuite le lemme \lean{stricte_croissante_to_croissante} prouve qu'une fonction strictement croissante est croissante:
 
-\begin{minted}{lean}
+\begin{minted}[breaklines]{lean}
 lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissante f → croissante f :=
   by
     intro hf n m hnm
@@ -258,17 +258,16 @@ lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissant
 \end{minted}
 
 
-
-\begin{itemize} [  align=left, leftmargin=20pt, itemsep=30pt ]
-    \item[\textbf{intro:}] Cette preuve commence par l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et 
+\begin{itemize} [  align=left,  itemsep=20pt ]
+    \item[\textbf{intro:}] Cette preuve commence par l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et
     \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. 
 
-    \item[\textbf{apply:}] Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit 
-    $\lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas.
+    \item[\textbf{apply:}] Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $
+    \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas.
 
     \item[\textbf{exact:}] Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie
-    que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{ 
-    n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}. Ainsi dans les deux cas, la tactique \lean{exact} prouve que la propriété 
+    que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{
+    n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}. Ainsi dans les deux cas, la tactique \lean{exact} prouve que la propriété
     obtenu est exactement celle attendue.
 
     
@@ -276,10 +275,11 @@ lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissant
 \end{itemize}
 
 
+\vspace{\baselineskip} 
 
 Enfin voici le lemme \lean{stricte_croissance_geq} qui nous servira également pour la suite:
 
-\begin{minted}{lean}
+\begin{minted}[breaklines]{lean}
 
 lemma stricte_croissance_geq (f : \Nat → \Nat) : strictement_croissante f → ∀ n : ℕ, f n >= n :=
   by
@@ -292,7 +292,7 @@ lemma stricte_croissance_geq (f : \Nat → \Nat) : strictement_croissante f → 
 
 Nous pouvons à présent prouver que si une suite converge alors toute suite extraite converge vers la même limite:    
 
-\begin{minted}{lean}    
+\begin{minted}[breaklines]{lean}    
     
 
 lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim  x l ∧ strictement_croissante f -> lim  (x ∘ f) l :=
@@ -307,37 +307,46 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
     linarith [t, stricte_croissance_geq f]
     
 \end{minted}
+\begin{itemize} [  align=left,  itemsep=20pt ]
 
-Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après l'expression du but qui commence par le quantificateur $\forall$ (voir définition de \lean{lim}).
+    \item [\textbf{rintro:}] Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante
+    f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après
+    l'expression du but qui commence par le quantificateur $\forall$ (voir définition de \lean{lim}).
 
-Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}.
+    \item [\textbf{obtain:}] Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}.
 
-Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. 
+    \item [\textbf{use:}] Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. 
 
-On introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. 
+    \item [\textbf{intro:}] On introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. 
 
-Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. 
+    \item [\textbf{apply:}] Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. 
 
-\lean{stricte_croissante_to_croissante} démontrée précédemment appliquée à \lean{f} et \lean{hf} nous donne la croissance de \lean{f}. Puis la définition de la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé t par la tactique have.
+    \item [\textbf{have:}] \lean{stricte_croissante_to_croissante} démontrée précédemment appliquée à \lean{f} et \lean{hf} nous donne la croissance de \lean{f}. Puis la définition de
+    la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé \lean{t} par la tactique have.
 
-De même, \lean{ stricte_croissance_geq} appliqué à \lean{f}, \lean{hf} et \lean{N} nous donne la propriété que nous avons nommée\lean{sup_N}.
+    \item [\textbf{have:}] De même, \lean{ stricte_croissance_geq} appliqué à \lean{f}, \lean{hf} et \lean{N} nous donne la propriété que nous avons nommée \lean{sup_N}.
 
-Enfin, par combinaison linéaire de ces deux dernières hypothèses,la tactique \lean{linarith} résout automatiquement le but.
+    \item [\textbf{linarith:}] Enfin, par combinaison linéaire de ces deux dernières hypothèses,la tactique \lean{linarith} résout automatiquement le but.
 
-\begin{minted}{lean}
+\end{itemize}
+
+\vspace{\baselineskip} 
+\vspace{\baselineskip} 
+ 
+\begin{minted}[breaklines]{lean}
 def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ]:= ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
 \end{minted}
 
-Cette définition de la limite prend en argument une suite \lean{x} de $\mathbb{N}$ dans $\alpha$, un type quelquonc de l'univers \lean{u} à partir duquel on construit un espace metrique grace à la syntaxe \lean{[MetricSpace α  ]}. \lean{lim'} prend en second argument un élément de $\alpha$, puis elle defini la convergence de la suite \lean{x} vers cet élément.
+Cette définition de la limite prend en argument une suite \lean{x} de $\mathbb{N}$ dans $\alpha$, un type quelquonc de l'univers \lean{u} à partir duquel on construit un espace metrique grace à la syntaxe \lean{[MetricSpace α  ]}. \lean{lim'} prend en second argument un élément de $\alpha$, puis elle defini la convergence de la suite \lean{x} vers cet élément.\\
 
 Nous pouvons à présent définir un espace métrique compact:
 
-\begin{minted}{lean}
+\begin{minted}[breaklines]{lean}
 
 def Compact (K : Type u) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
 \end{minted}
 
-Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément \lean{l} vers lequel la fonction composée converge.
+Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément  \lean{l} vers lequel la fonction composée converge.
 
 \begin{minted}{lean}
 def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
@@ -346,13 +355,12 @@ def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃
 
 Une partie d'un espace métrique est compact si le sous-espace métrique correspondant est compact. Etant donné que la distance se conserve pour tout sous-espace métrique, il n'est pas nécessaire de définir explicitement un nouvel espace métrique. Une partie \lean{K} de \lean{X} est un type de \lean{Set X} et tout élément de  \lean{K} est effectivement un type de \lean{X}. Ainsi  \lean{K} conserve les propriétées de \lean{X}. Il suffit donc d'ajuster la définition précédente en remplaçant \lean{∀ x : ℕ → X} par \lean{∀ x : ℕ → K}, ainsi que \lean{lim'} par \lean{lim}. En effet, \lean{lim} prend en argument une suite à valeur dans un type de \lean{Set X} et \lean{lim'} ne conviend qu'à une suite à valeurs dans \lean{X}.
 
-
+ \vspace{\baselineskip} 
+ 
 \subsubsection{Compacité et fermeture}
-Nous démontrerons dans cette partie quelques résultats sur la fermeture.
+Nous démontrerons dans cette partie quelques résultats sur la fermeture. Tout d'abord, montrons qu'une partie compact de \lean{X} est fermé dans \lean{X}
 
-Tout d'abord, montrons qu'une partie compact de \lean{X} est fermé dans \lean{X}
-
-\begin{minted}{lean}   
+\begin{minted}[breaklines]{lean}   
 lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K := 
   by
     intro K h
@@ -390,7 +398,7 @@ Afin d'expliquer cette preuve de manière claire et détaillée,  nous la divise
     Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact,
     et h l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.\\
     La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et h devient la négation du but précédent.
-    
+
 
     \item \textbf{Construction d'une suite de \lean{K} convergeant dans \lean{X} exlu de \lean{K} }\\
     Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer
@@ -403,7 +411,7 @@ Afin d'expliquer cette preuve de manière claire et détaillée,  nous la divise
 
 
     \item  \textbf{ Preuve que \lean{x} n'admet pas de valeur d'adhérence}\\
-    Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{x},
+    Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{x}, 
     n'admet pas de valeur d'adhérence dans \lean{K}, donc que \lean{K} n'est pas compact. \\
     \lean{K} est supposé compact donc \lean{choose } applique la définition de la compacité à x, et prend alors une suite extraite de \lean{x} qui converge dans \lean{K }vers \lean{l'},
     on nomme \lean{hl'} l'hypothèse que \lean{l'} est dans \lean{K}.\\
@@ -411,13 +419,12 @@ Afin d'expliquer cette preuve de manière claire et détaillée,  nous la divise
     limite.\\ 
     La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at l_not_in_K } elle remplace dans \lean{l_not_in_K} le membre de gauche par le membre de droite. Ainsi
     \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}.\\ 
-    Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.
+    Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.\\
     Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.
 
 \end{itemize}
 
 \vspace{\baselineskip}
-
 Revenons sur l'hypothèse \lean{diff}, le but est la négation d'une égalité, donc la tactique \lean{intro} introduit l'hypothèse de l'égalité et change le but en \lean{False}. Ceci nous permet de résonner par l'absurde. Ensuite, le lemme de la fermeture de l'adhérence appliqué à \lean{K} et nommé \lean{j}.\lean{rw} remplace alors \lean{Closure K} par \lean{K} dans \lean{j}. D'où une contradiction avec \lean{h}. Par conséquent \lean{apply h at j} change \lean{j} en \lean{False}. Encore une fois, \lean{j} est exactement le but, donc \lean{exact j} termine la preuve
 
 L'hypothèse suivante \lean{c} est déduite de \lean{diff} par \lean{Set.ssubset_iff_subset_ne}, un lemme de mathlib utilisé dans le sens indirect (\lean{.mpr}). Il prend en argument \lean{sub_closure}, l'inclusion de tout ensemble dans son adhérence, en particulier pour \lean{K} (argument implicite), puis \lean{diff.symm} où \lean{.symm} permet d'inverser les membres de gauche et de droite.
@@ -425,13 +432,10 @@ L'hypothèse suivante \lean{c} est déduite de \lean{diff} par \lean{Set.ssubset
 Enfin l'hypothèse \lean{l_in_closure_not_in_K} est déduite de l'inclusion strict de \lean{c} par le lemme de mathlib \lean{Set.exists_of_ssubse}.\\
 
 
-Les preuves suivantes seront moins détaillées afin d'éviter de trop se répéter, tous les théorèmes utilisés commençant par \lean{Set.},\lean{Fonction.}, et \lean{Nat.}  proviennent de Mathlib.\\
+Les preuves suivantes seront moins détaillées afin d'éviter de trop se répéter, tous les théorèmes commençant par \lean{Set.} proviennent de Mathlib. Poursuivons avec la proposition que toute partie fermée d'une partie compacte est compacte.\\
 
 
-Poursuivons avec la proposition que toute partie fermée d'une partie compacte est compacte.
-
-
-\begin{minted}{lean}   
+\begin{minted}[breaklines]{lean}   
 lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_sub: H  ⊆ K) (h_closed : is_closed H)  : is_compact H := by
   intro x
   have x_in_k : ∀ (n : ℕ), (x n : X) ∈ K := by
@@ -464,23 +468,24 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact h_closed
 \end{minted}
 
-Nous montrons que \lean{H} est compact. Nous prenons donc une suite \lean{x} à valeurs dans \lean{H} et nous montrons l'existence d'une suite extraite convergente.
+Nous montrons que \lean{H} est compact. Nous prenons donc une suite \lean{x} à valeurs dans \lean{H} et nous montrons l'existence d'une suite extraite convergente.\\
 
-Pour tout n, montrer que \lean{x n} est dans \lean{K} revient à montrer que \lean{x n} est dans \lean{H}, ceci découle de l'inclusion de \lean{H} dans \lean{K}, nous changeons le but de cette manière par \lean{Set.mem_of_subset_of_mem}. \lean{x n} contient la proposition d'appartenance à \lean{H} en deuxième position, nous appliquons donc \lean{(x n).2}
+Pour tout n, montrer que \lean{x n} est dans \lean{K} revient à montrer que \lean{x n} est dans \lean{H}, ceci découle de l'inclusion de \lean{H} dans \lean{K}, nous changeons le but de cette manière par \lean{Set.mem_of_subset_of_mem}. \lean{x n} contient la proposition d'appartenance à \lean{H} en deuxième position, nous appliquon donc \lean{(x n).2}\\
 
-Par la compacité de\lean{K} nous posons une suite de \lean{K} coincidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.
+Par la compacité de\lean{K} nous posons une suite de \lean{K} coincidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.\\
 
-la limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coincide avec cette dernière.
+la limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coincide avec cette dernière.\\
 
-Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.
+Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.\\
 
-Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.
+Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.\\
 
-Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x)) $ \\
+Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$ et en appliquant \lean{eg}. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x)) $ 
 
-De façon similaire la preuve suivante montre que toute partie fermée d'un espace compact est compact. Nous adaptons donc la preuve précédente, pour l'hypothèse que \lean{X} est compact.
 
-\begin{minted}{lean}
+
+
+\begin{minted}[breaklines]{lean}
 lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed K) : is_compact K := by
   intro x
   let x' : ℕ → X := λ n ↦ x n
@@ -505,11 +510,11 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 \end{minted}
 
 
-\subsubsection{Compacité et continuité}
 
+\subsubsection{Compacité et continuité}
 L'image d'un compact par une fonction continue est compact. En voici la preuve formalisée en lean.
 
-\begin{minted} {lean}
+\begin{minted}[breaklines] {lean}
 lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_compact : Compact  X) : is_compact (Set.image f Set.univ) := by
 
   intro y
@@ -533,7 +538,8 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_co
   apply And.intro
   exact croiss_j
 
-  have limite : lim' (f ∘ x ∘ j) (f l) := by -- d'abord on doit montrer lim' car f prend ses antécédents dans X
+  have limite : lim' (f ∘ x ∘ j) (f l) := by 
+  
     apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
     intro ε hε 
     obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
@@ -551,23 +557,27 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_co
 
 \end{minted}
 
-Dans cette preuve \lean{Set.univ} désigne l'ensemble des éléments de \lean{X} et est un type de \lean{Set X}. \lean{Set.image} désigne l'image par \lean{f} d'un type de \lean{Set X}. Donc \lean{Set.image} ne peux pas prendre \lean{X} en argument. On prendra donc l'image de \lean{Set.univ}.
+Dans cette preuve \lean{Set.univ} désigne l'ensemble des éléments de \lean{X} et est un type de \lean{Set X}. \lean{Set.image} désigne l'image par \lean{f} d'un type de \lean{Set X}. Donc \lean{Set.image} ne peux pas prendre \lean{X} en argument. On prendra donc l'image de \lean{Set.univ}.\\\\
 
-Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{(Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.
+Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{(Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.\\
 
-La tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.
+La tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.\\
 
-La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.
+La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.\\
 
-On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriétée est vrai pour tout élément de \lean{X}. 
+On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriétée est vrai pour tout élément de \lean{X}. \\
 
-avant d'appliquer cette propriétée, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. 
+avant d'appliquer cette propriétée, \lean{apply And.intro} permet de séparer les arguments du but 
 
-Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.
+\lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. \\
 
-Ainsi, on montre que \lean{lim} coincide trivialement avec \lean{lim'} par une preuve en epsilon.
+Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.\\
 
-\subsubsection{Compacité et complétude}
+Ainsi, on montre que \lean{lim} coincide trivialement avec \lean{lim'} par une "preuve en epsilon".
+
+\vspace{\baselineskip} 
+
+\subsection{Compacité et complétude}
 
 Tout espace métrique compact est complet. Ceci est la dernière proposition de base que nous avons formalisé en Lean avant de définir la compacité de manière topologique.
 
@@ -579,10 +589,12 @@ lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K :
   apply Cauchy_val_adherence_conv x l f hf lim_l hx 
 \end{minted}
 
-La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. \lean{use} propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
+La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. On propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
 
+\vspace{\baselineskip} 
 
-\subsubsection{Compacité et recouvrements}
+\subsection{Compacité et recouvrements}
+
 
 \subsection{Connexité}
 
