@@ -364,9 +364,45 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
 sorry
 
 
+--exemple "minimal" du problème de construction de suite : comment construire une suite injective dans un ensemble X, à partir de l'hypothèse qu'à chaque fois qu'on a une partie finie de X, on peut trouver un nouvel élément ?
 
 
---(e) Continuite uniforme
+lemma suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l)) := by 
+  classical
+  choose next hnext using H
+  let f := λ (s : Finset X) ↦ insert (next s) s
+  let sets := λ n ↦ Nat.iterate f n ∅
+  existsi next ∘ sets
+  intro k l h_kl
+  have h_rec: ∀ n: ℕ , sets (n + 1) = f (sets n) := by
+    simp only [sets]
+    intro n
+    apply  Function.iterate_succ_apply' f
+    
+  have inclu: next (sets k)  ∈ sets l:= by 
+    induction l with
+    | zero =>  cases h_kl  
+
+    | succ n ih => 
+      rw [h_rec]
+      simp only [f]
+      have h := lt_or_eq_of_le ((Nat.lt_succ_iff ).mp h_kl)
+      rw [Finset.insert_eq]
+      cases h with
+      | inl h1 => 
+        apply ih at h1
+        exact Finset.mem_union_right {next (sets n)} h1
+        
+      | inr h2 => 
+        rw [h2]
+        exact Finset.mem_union_left (sets n) (Finset.mem_singleton_self (next (sets n)))
+  simp
+  push_neg
+  intro j 
+  rw [j] at inclu
+  apply hnext ( sets l) at inclu
+  exact inclu
+
 
 
 
