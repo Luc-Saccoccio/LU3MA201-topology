@@ -367,7 +367,11 @@ sorry
 --exemple "minimal" du problème de construction de suite : comment construire une suite injective dans un ensemble X, à partir de l'hypothèse qu'à chaque fois qu'on a une partie finie de X, on peut trouver un nouvel élément ?
 
 
-lemma suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l)) := by 
+
+
+
+
+lemma h_suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l)) := by 
   classical
   choose next hnext using H
   let f := λ (s : Finset X) ↦ insert (next s) s
@@ -403,6 +407,78 @@ lemma suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ →
   apply hnext ( sets l) at inclu
   exact inclu
 
+
+lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ x: Fin n → X, Set.univ ⊆ ( ⋃ xi ∈ List.ofFn x, B( xi , α ) ):= by
+
+  contrapose hX -- on suppose que la conclusion n'est pas vérifiée et on montre que X n'est pas conmpact
+  push_neg at hX
+
+  -- on obtient une suite d'élément u tel que ∀n, et pour toute famille (x i)i≤ n, u n ∉ ⋃(i≤n) B(xi,α)
+  have h : ∀n, ∀ xn : Fin n → X,  ∃ un ∈ Set.univ , un ∉ ⋃ xn_i ∈ List.ofFn xn, B(xn_i,α) := by
+    intro n xn
+    apply (Set.not_subset_iff_exists_mem_not_mem).mp (hX n xn)
+  unfold Compact
+  push_neg
+
+  have H: ∀ A: Finset X, ∃ a ∈ Set.univ , a ∉ ⋃ xn_i ∈ A, B(xn_i,α) := by
+    intro A
+    let s:= Finset.toList A
+    specialize h s.length
+
+    let x : Fin s.length  → X := λ n ↦ s.nthLe n.1 n.2 
+    specialize h x
+    obtain ⟨ a, ha, hna⟩ := h
+    use a
+    apply And.intro
+    exact ha
+    push_neg
+    --unfold 
+    sorry
+  have h': ∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l) ∧ d ( u k) (u l) >= α := by
+    classical
+    choose next hnext using H 
+    let f := λ (s : Finset X) ↦ insert (next s) s
+    let sets := λ n ↦ Nat.iterate f n ∅
+    existsi next ∘ sets
+    intro k l h_kl
+    have h_rec: ∀ n: ℕ , sets (n + 1) = f (sets n) := by
+      simp only [sets]
+      intro n
+      apply  Function.iterate_succ_apply' f
+    
+    have inclu: next (sets k)  ∈ sets l:= by 
+      induction l with
+      | zero =>  cases h_kl  
+
+      | succ n ih => 
+        rw [h_rec]
+        simp only [f]
+        have h := lt_or_eq_of_le ((Nat.lt_succ_iff ).mp h_kl)
+        rw [Finset.insert_eq]
+        cases h with
+      | inl h1 => 
+        apply ih at h1
+        exact Finset.mem_union_right {next (sets n)} h1
+        
+      | inr h2 => 
+        rw [h2]
+        exact Finset.mem_union_left (sets n) (Finset.mem_singleton_self (next (sets n)))
+    simp
+    push_neg
+    apply And.intro
+    intro j 
+    rw [j] at inclu
+    have g: ((sets l): Set X) ⊆ ⋃ xn_i ∈( sets l), B(xn_i,α):= sorry
+    apply Set.not_mem_subset g ((hnext) ( sets l)).2 at inclu
+    exact inclu
+    have not_in_ball: (next (sets l)) ∉ B((next (sets k)),α):=sorry -- by exact ?? (hnext (sets l)).2 inclu (par définition de l'union vrai pour tout element de sets l donc en particulier pour (next (sets k)))
+    unfold open_ball at not_in_ball
+    simp at not_in_ball
+    exact not_in_ball
+  obtain ⟨ x, hx⟩ :=   h'
+  use x
+
+  sorry -- il reste à montrer que  x ne converge pas 
 
 
 
