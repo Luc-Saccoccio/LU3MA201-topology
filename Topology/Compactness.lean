@@ -297,10 +297,31 @@ lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K :
 
 --(d) Compacite et recouvrements
 
+theorem Converg_Cauchy (u : ℕ → X) : lim' u l → CauchySeq u := by
+  intro hl
+  unfold lim' at hl
+  unfold CauchySeq
+  intro ε ε_pos
+  specialize hl (ε/2) (half_pos ε_pos) 
+  obtain ⟨N, hN⟩ := hl 
+  use N
+  intro m hm
+  intro n hn
+  have hd : d (u n) (u m) ≤ d (u n) l + d l (u m)  :=  dist_triangle
+  have h₁ : d (u n) l < ε/2 := @dist_symm X _ _ _ ▸ hN n hn
+  have h₂ : d (u m) l < ε/2 := @dist_symm X _ _ _ ▸ hN m hm
+  have hε := add_lt_add h₁ h₂
+  have h : d (u n) (u m) < ε/2 + ε/2 := by
+    nth_rewrite 2 [dist_symm] at hε 
+    apply lt_of_le_of_lt hd hε
+  have H : d (u n) (u m) < ε := by
+    linarith 
+  rw [dist_symm]
+  exact H
+
 
 
 --exemple "minimal" du problème de construction de suite : comment construire une suite injective dans un ensemble X, à partir de l'hypothèse qu'à chaque fois qu'on a une partie finie de X, on peut trouver un nouvel élément ?
-
 
 
 lemma h_suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l)) := by 
@@ -357,15 +378,21 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
     let s:= Finset.toList A
     specialize h s.length
 
-    let x : Fin s.length  → X := λ n ↦ s.nthLe n.1 n.2 
+    let x : Fin s.length  → X := λ n ↦ s.get n 
     specialize h x
     obtain ⟨ a, ha, hna⟩ := h
     use a
     apply And.intro
     exact ha
-    push_neg
-    --unfold 
-    sorry
+    push_neg  
+
+    have eg1: s=  List.ofFn x:= by 
+      apply  List.ext_get
+      rw [List.length_ofFn]
+      intro n h1 h2
+      simp [x]
+
+
   have h': ∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l) ∧ d ( u k) (u l) >= α := by
     classical
     choose next hnext using H 
@@ -400,17 +427,48 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
     apply And.intro
     intro j 
     rw [j] at inclu
-    have g: ((sets l): Set X) ⊆ ⋃ xn_i ∈( sets l), B(xn_i,α):= sorry
+    have g: ((sets l): Set X) ⊆ ⋃ xn_i ∈( sets l), B(xn_i,α):= by
+      rw [Set.subset_def ]
+      intro t ht
+      simp
+      use t
+      apply And.intro
+      exact ht
+      rw [dist_sep_eq_zero]
+      exact hα
+ 
     apply Set.not_mem_subset g ((hnext) ( sets l)).2 at inclu
     exact inclu
-    have not_in_ball: (next (sets l)) ∉ B((next (sets k)),α):=sorry -- by exact ?? (hnext (sets l)).2 inclu (par définition de l'union vrai pour tout element de sets l donc en particulier pour (next (sets k)))
-    unfold open_ball at not_in_ball
+    have not_in_ball: (next (sets l)) ∉ B((next (sets k)),α):= by 
+      have h:=  (hnext (sets l)).2
+      simp
+      simp at h 
+      exact h (next (sets k)) inclu
     simp at not_in_ball
     exact not_in_ball
   obtain ⟨ x, hx⟩ :=   h'
   use x
+  intro f l hf h_lim 
+  have h_cauchy := Converg_Cauchy ( x∘f) (h_lim )
+  specialize h_cauchy α hα 
+  obtain ⟨ N, hN⟩ := h_cauchy
+  specialize hN N ( Nat.le_refl N) (N+1) ( Nat.le_succ N)
+  simp at hN
+  unfold strictement_croissante at hf
+  have contradiction:= (hx (f N) (f ( N+1)) (hf (N+1) N (Nat.lt_succ_self N))  ).2 
+  linarith
 
-  sorry -- il reste à montrer que  x ne converge pas 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
