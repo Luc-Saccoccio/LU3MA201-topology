@@ -186,8 +186,15 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
     
     apply And.intro
     · intro e he
-      have hl: ∃ N, ∀ n ≥ N, δ n < e:= by sorry 
-        -- use N en posant N= [1/e], voir dans mathlib notation partie entière
+      have hl [FloorSemiring ℝ ]: ∃ N, ∀ n ≥ N, δ n < e:= by
+        --use ⌈(1 / e)⌉₊  
+        use Nat.ceil (1/e)
+        intro n hn
+        simp [δ ]
+        simp at hn
+        have i:=  lt_of_le_of_lt hn (lt_add_one (n:ℝ))
+        exact inv_lt_of_inv_lt he i
+
       obtain ⟨ N, hN⟩ := hl
       use N
       intro n hn
@@ -198,7 +205,7 @@ lemma sequential_continous (f : X → Y ) (x₀ : X) :  continuous_on f x₀ ↔
       intro N
       use N, le_rfl
       apply (hx N).2 
-
+    
 
  
 
