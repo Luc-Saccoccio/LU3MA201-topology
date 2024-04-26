@@ -1119,11 +1119,7 @@ Afin d'expliquer cette preuve de manière claire et détaillée, nous la diviser
 \end{itemize}
 
 \vspace{\baselineskip}
-Revenons sur l'hypothèse \lean{diff}, le but est la négation d'une égalité, donc la tactique \lean{intro} introduit l'hypothèse de l'égalité et change le but en \lean{False}. Ceci nous permet de résonner par l'absurde. Ensuite, le lemme de la fermeture de l'adhérence appliqué à \lean{K} et nommé \lean{j}.\lean{rw} remplace alors \lean{Closure K} par \lean{K} dans \lean{j}. D'où une contradiction avec \lean{h}. Par conséquent \lean{apply h at j} change \lean{j} en \lean{False}. Encore une fois, \lean{j} est exactement le but, donc \lean{exact j} termine la preuve.
-
-L'hypothèse suivante \lean{c} est déduite de \lean{diff} par \lean{Set.ssubset_iff_subset_ne}, un lemme de mathlib utilisé dans le sens indirect (\lean{.mpr}). Il prend en argument \lean{sub_closure}, l'inclusion de tout ensemble dans son adhérence, en particulier pour \lean{K} (argument implicite), puis \lean{diff.symm} où \lean{.symm} permet d'inverser les membres de gauche et de droite.
-
-Enfin l'hypothèse \lean{l_in_closure_not_in_K} est déduite de l'inclusion strict de \lean{c} par le lemme de Mathlib \lean{Set.exists_of_ssubse}.\\
+Revenons sur l'hypothèse \lean{diff}, le but est la négation d'une égalité, donc la tactique \lean{intro} introduit l'hypothèse de l'égalité et change le but en \lean{False}. Ceci nous permet de résonner par l'absurde. Ensuite, le lemme de la fermeture de l'adhérence appliqué à \lean{K} et nommé \lean{j}.\lean{rw} remplace alors \lean{Closure K} par \lean{K} dans \lean{j}. D'où une contradiction avec \lean{h}. Par conséquent \lean{apply h at j} change \lean{j} en \lean{False}. Encore une fois, \lean{j} est exactement le but, donc \lean{exact j} termine la preuve. L'hypothèse suivante \lean{c} est déduite de \lean{diff} par \lean{Set.ssubset_iff_subset_ne}, un lemme de mathlib utilisé dans le sens indirect (\lean{.mpr}). Il prend en argument \lean{sub_closure}, l'inclusion de tout ensemble dans son adhérence, en particulier pour \lean{K} (argument implicite), puis \lean{diff.symm} où \lean{.symm} permet d'inverser les membres de gauche et de droite. Enfin l'hypothèse \lean{l_in_closure_not_in_K} est déduite de l'inclusion strict de \lean{c} par le lemme de Mathlib \lean{Set.exists_of_ssubse}.\\
 
 Les preuves suivantes seront moins détaillées afin d'éviter de trop se répéter, tous les théorèmes commençant par \lean{Set.} et \lean{Function.} proviennent de Mathlib. Poursuivons avec la proposition que toute partie fermée d'une partie compacte est compacte.\\
 
@@ -1161,20 +1157,22 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   exact h_closed
 \end{minted}
 
-Nous montrons que \lean{H} est compact. Nous prenons donc une suite \lean{x} à valeurs dans \lean{H} et nous montrons l'existence d'une suite extraite convergente.\\
+\begin{itemize}
+    \item Nous montrons que \lean{H} est compact. Nous prenons donc une suite \lean{x} à valeurs dans \lean{H} et nous montrons l'existence d'une suite extraite convergente.
 
-Pour tout \lean{n}, montrer que \lean{x n} est dans \lean{K} revient à montrer que \lean{x n} est dans \lean{H}, ceci découle de l'inclusion de \lean{H} dans \lean{K}, nous changeons le but de cette manière par \lean{Set.mem_of_subset_of_mem}. Comme \lean{x n} contient la proposition d'appartenance à \lean{H} en deuxième position, nous appliquons \lean{(x n).2}\\
+    \item Pour tout \lean{n}, montrer que \lean{x n} est dans \lean{K} revient à montrer que \lean{x n} est dans \lean{H}, ceci découle de l'inclusion de \lean{H} dans \lean{K}, nous changeons le but de cette manière par \lean{Set.mem_of_subset_of_mem}. Comme \lean{x n} contient la proposition d'appartenance à \lean{H} en deuxième position, nous appliquons \lean{(x n).2}\\
 
-Par la compacité de\lean{K} nous posons une suite de \lean{K} coïncidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.\\
+    \item Par la compacité de\lean{K} nous posons une suite de \lean{K} coïncidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.\\
 
-La limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coïncide avec cette dernière.\\
+    \itemLa limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coïncide avec cette dernière.\\
 
-Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.\\
+    \item Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.\\
 
-Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.\\
+    \item Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.\\
 
-Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$ et en appliquant \lean{eg}. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x))$
-
+    \item Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la
+    convergence par une preuve en $\epsilon$ et en appliquant \lean{eg}. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x))$
+\end{itemize}
 
 \begin{minted}{lean}
 lemma closed_incompact_iscompact (hX : Compact X) (K : Set X) (hK : is_closed K) : is_compact K := by
@@ -1247,25 +1245,26 @@ lemma image_continuous_compact (f : X → Y) (f_continuous: Continuous f) (h_com
 
 \end{minted}
 
-Dans cette preuve \lean{Set.univ} désigne l'ensemble des éléments de \lean{X} et est un type de \lean{Set X}. \lean{Set.image} désigne l'image par \lean{f} d'un type de \lean{Set X}. Donc \lean{Set.image} ne peux pas prendre \lean{X} en argument. On prendra donc l'image de \lean{Set.univ}.\\\\
+\begin{itemize}
+    \item Dans cette preuve \lean{Set.univ} désigne l'ensemble des éléments de \lean{X} et est un type de \lean{Set X}. \lean{Set.image} désigne l'image par \lean{f} d'un type de \lean{Set X}. Donc \lean{Set.image} ne peux pas prendre \lean{X} en argument. On prendra donc l'image de \lean{Set.univ}.\\\\
 
-Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.\\
+    \item Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.
 
-La tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.\\
+    \itemLa tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.
 
-La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.\\
+    \item La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.
 
-On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriété est vrai pour tout élément de \lean{X}. \\
+    \item On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriété est vrai pour tout élément de \lean{X}. 
 
-Avant d'appliquer cette propriété, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. \\
+    \item Avant d'appliquer cette propriété, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. 
 
-Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.\\
+    \item Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.
 
-Ainsi, on montre que \lean{lim} coïncide trivialement avec \lean{lim'} par une preuve en epsilon.\\
+    \item Ainsi, on montre que \lean{lim} coïncide trivialement avec \lean{lim'} par une preuve en epsilon.
 
 \vspace{\baselineskip}
 
-Tout espace métrique compact est complet. Ceci est la dernière proposition de base que nous avons formalisé en Lean avant de définir la compacité de manière topologique.
+Terminons avec un dernier résultat sur la complétude: tout espace métrique compact est complet.
 
 \begin{minted} [breaklines] {lean}
 lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K := by
@@ -1281,13 +1280,7 @@ La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme
 
 \subsection{Compacité et recouvrements}
 
-Pour tout compact et pour tout rayon \lean{α} il existe un recouvrement fini par des des boules de rayon \lean{α}. Cette propriété est appelé précompacité.
-
-L'idée est de raisonner par contraposée. En supposant l'existence d'un recouvrement fini par des boules de rayon \lean{alpha} , on peut construire une suite dont tout les termes sont séparés d'une distance supérieur ou égale à \lean{alpha}. Une telle suite ne peut admettre de valeurs d'adhérence.
-
-La partie la plus complexe de la formalisation de ce lemme en Lean a été de construire cette suite par récurrence.\\
-
-Commençons donc par un exemple plus simple d'un tel procédé:
+Pour tout compact et pour tout rayon \lean{α} il existe un recouvrement fini par des des boules de rayon \lean{α}. Cette propriété est appelé précompacité. Pour le démontrer l'idée est de raisonner par contraposée. En supposant l'existence d'un recouvrement fini par des boules de rayon \lean{alpha} , on peut construire une suite dont tout les termes sont séparés d'une distance supérieur ou égale à \lean{alpha}. Une telle suite ne peut admettre de valeurs d'adhérence. La partie la plus complexe de la formalisation de ce lemme en Lean a été de construire cette suite par récurrence. Commençons donc par un exemple plus simple d'un tel procédé, "le petit lemme" \lean{h_suite}:
 
 \begin{minted}{lean}
 lemma h_suite (X: Type) (H : (∀ A : Finset X, ∃ x : X, x ∉ A)) : (∃ u : ℕ → X, ∀ k l, k < l → (u k ≠ u l)) := by
@@ -1327,7 +1320,9 @@ lemma h_suite (X: Type) (H : (∀ A : Finset X, ∃ x : X, x ∉ A)) : (∃ u : 
   exact h_in
 \end{minted}
 
+
 \begin{itemize}
+
     \item \textbf{Mise en place des hypothèses}
 
     La tactique \lean{choose} crée à partir de \lean{H}, une fonction qui à tout ensemble fini associe un nouvel élément. Nous nommons \lean{new} cette fonction et \lean{h_new} la propriété qu'elle vérifie.
@@ -1336,10 +1331,11 @@ lemma h_suite (X: Type) (H : (∀ A : Finset X, ∃ x : X, x ∉ A)) : (∃ u : 
 
     Enfin nous définissons la suite \lean{f_set} par itération de \lean{f}. Elle est initialisé à \lean{0} par \lean{(f_set 0) = (f \empty)} puis pour tout \lean{n}, \lean{(f_set n+1) = f (f n) }. On obtient donc une suite d'ensembles croissante pour l'inclusion, ou chaque ensemble contient un nouveau terme.
 
-    Nous nommons enfin \lean{h_rec} la relation de récurrence vérifié par cette suite.
+    Nous nommons enfin \lean{h_rec} la relation de récurrence vérifiée par cette suite.
 
     \item \textbf{Résolution du goal }
-    Rappelons que notre but est \lean{∃ u, ∀ (k l : ℕ), k < l → u k ≠ u l}, Nous montrons alors que la fonction composée \lean{new ∘ f_set} convient. Nous fixons \lean{k},\lean{kl} tels que \lean{ k<l} et par récurrence sur \lean{l} nous montrons \lean{h_in: new (f_set k) ∈ f_set l}. Ensuite, \lean{intro j} suppose l'égalité \lean{new(f_set k)=new (f_set l)} et le but est alors de montrer que c'est faux. La tactique \lean{rw} remplace \lean{new (f_set k)} par \lean{new (f_set l)} dans \lean{h_in}. Nous obtenons alors une contradiction avec \lean{ h_new ( f_set l) }.
+    
+    Rappelons que notre but est \lean{∃ u, ∀ (k l : ℕ), k < l → u k ≠ u l}. Nous devons alors montrer que la fonction composée \lean{new ∘ f_set} convient. Nous fixons \lean{k},\lean{kl} tels que \lean{ k<l} et par récurrence sur \lean{l} nous montrons \lean{h_in: new (f_set k) ∈ f_set l}. Ensuite, \lean{intro j} suppose l'égalité \lean{new(f_set k)=new (f_set l)} et le but est alors de montrer que c'est faux. La tactique \lean{rw} remplace \lean{new (f_set k)} par \lean{new (f_set l)} dans \lean{h_in}. Nous obtenons alors une contradiction avec \lean{ h_new ( f_set l) }.
 \end{itemize}
 
 A présent voici le lemme qui nous intéresse :
