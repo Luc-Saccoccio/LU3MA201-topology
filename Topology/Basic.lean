@@ -1,6 +1,9 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Set.Lattice
 import Mathlib.Tactic.Linarith.Frontend
+import Mathlib.Algebra.Order.Floor
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
 
 universe u v w
 
