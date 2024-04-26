@@ -841,10 +841,10 @@ theorem Converg_Cauchy (u : ℕ → X) : Converg u → CauchySeq u :=
 
 
 Il s'agit de la preuve qu'une suite de Cauchy est convergente.
-L'instruction \lean{intro ⟨l, hl⟩} introduit l'hypothèse de convergence en utilisant l existence de la limite \lean{l} ainsi que en la notant hl. Nous disposons maintenant de l'énoncé général : $$\forall \varepsilon \geq 0 \exists N \in \mathbb{N},\forall n \geq N, d (u n) (l) < \varepsilon$$. Nous introduisons donc la quantité $\varepsilon$ que nous divisons par 2 dans l hypothèse He pour la suite de la preuve.
-Grâce a l hypothèse, nous avons un $N$ entier appliqué a cet $\varepsilon$/2 par \lean{obtain ⟨N, hN⟩ := hl ε/2 h} qui est utilisé avec \lean{use N}.
+L'instruction \lean{intro ⟨l, hl⟩} introduit l'hypothèse de convergence en utilisant l existence de la limite \lean{l} ainsi que en la notant hl. Nous disposons maintenant de l'énoncé général : $$\forall \varepsilon \geq 0 \exists N \in \mathbb{N},\forall n \geq N, d (u n) (l) < \varepsilon$$. Nous introduisons donc la quantité $\varepsilon$ que nous divisons par 2 dans l'hypothèse \lean{Hε} pour la suite de la preuve.
+Grâce a l'hypothèse, nous avons un $N$ entier appliqué à cet $\varepsilon$/2 par \lean{obtain ⟨N, hN⟩ := hl ε/2 h} qui est utilisé avec \lean{use N}.
 
-On invoque un n et m > N pour continuer de parcourir l'hypothèse pour arriver au cœur de la preuve de ce lemme. Nous avons besoin de deux énoncés
+On invoque \lean{un} \lean{n} et \lean{m > N} pour continuer de parcourir l'hypothèse pour arriver au cœur de la preuve de ce lemme. Nous avons besoin de deux énoncés
 
 \begin{itemize}
     \item \lean{hd} qui consiste a montrer que \lean{d (u n) (u m) ≤ d (u n) l + d l (u m)} par l'inégalité triangulaire
@@ -857,12 +857,12 @@ Les énoncés he et h condensent les inégalités précédentes avec successivem
     \item $a \leq b \land b \leq c \implies a\leq c$ (\lean{lt_trans}) appliquée à \lean{hd} et \lean{he}
 \end{itemize}
 
-Il ne nous reste plus qu'à préciser a Lean que \lean{ε/2 + ε/2 = ε} grâce a la tactique \lean{linarith} pour finir la preuve.
+Il ne nous reste plus qu'à préciser à Lean que \lean{ε/2 + ε/2 = ε} grâce à la tactique \lean{linarith} pour finir la preuve.
 
 \vspace{\baselineskip}
 \textbf{Une suite de Cauchy est bornée}\\
 
-Le second lemme est le caractère bornée des suites de Cauchy :
+Le second lemme est le caractère borné des suites de Cauchy :
 
 \begin{minted}{lean}
 lemma Cauchy_borne (u : ℕ → X) : (h : CauchySeq u) → Bornee u := by
@@ -888,11 +888,11 @@ De deux choses l'une :
     \item si $M \leq  1$ , M <- 1 et 1 est un majorant de la suite d (u N) (u n)
 \end{itemize}
 
-On définit $D := \{d\ (u\ N)\ (u\ n)\ \mid\ n \leq N-1\}$, l'ensemble des distances entre \lean{u N} et tous les autres termes \lean{u} d'indices inférieurs a \lean{N}. On note \lean{M} le max de cet ensemble.
+On définit $D := \{d\ (u\ N)\ (u\ n)\ \mid\ n \leq N-1\}$, l'ensemble des distances entre \lean{u N} et tous les autres termes \lean{u} d'indices inférieurs à \lean{N}. On note \lean{M} le max de cet ensemble.
 
 Une autre méthode, plus algorithmique, serait de faire une induction sur n < N : poser $M := d\ (u\ N)\ (u\ 0)$ puis comparer $M$ aux autres distances. Dès que $M$ est dépassé par une distance, ce nouveau majorant remplace l'ancienne valeur de $M$.
 
-Supposons le M obtenu, il reste a majoré les termes d indices supérieures a N. Ils le sont dés le départ par l hypothèse que la suite est de Cauchy. Le majorant de la suite sera donc le maximum entre M et 1, comme annoncé.
+Supposons le M obtenu, il reste à majoré les termes d'indices supérieures à \lean{N}. Ils le sont dés le départ par l'hypothèse que la suite est de Cauchy. Le majorant de la suite sera donc le maximum entre M et 1, comme annoncé.
 
 
 \textbf{Une suite de Cauchy ayant une valeur d adhérence converge}\\
@@ -922,7 +922,7 @@ lemma Cauchy_val_adherence_conv (u : ℕ → X) (l : X) (f : ℕ → ℕ)
   linarith
 \end{minted}
 
-La fonction \lean{f} supposée strictement croissante (hypothèse \lean{h1}) est la suite extractrice. L'hypothèse \lean{h2} correspond a l'hypothèse d'existence d'une valeur d'adhérence. Comme toute preuve débutant par une généralité, invoquons un epsilon strictement positif. On injecte ensuite la moitié de cette quantité dans les hypothèse \lean{h2} (la convergence de la suite extraite) et \lean{h3} (la suite \lean{u} est de Cauchy).
+La fonction \lean{f} supposée strictement croissante (hypothèse \lean{h1}) est la suite extractrice. L'hypothèse \lean{h2} correspond à l'hypothèse d'existence d'une valeur d'adhérence. Comme toute preuve débutant par une généralité, invoquons un epsilon strictement positif. On injecte ensuite la moitié de cette quantité dans les hypothèse \lean{h2} (la convergence de la suite extraite) et \lean{h3} (la suite \lean{u} est de Cauchy).
 On obtient ainsi \lean{N1} et \lean{N2} respectivement des hypothèses \lean{h2} et \lean{h3} pour ce \lean{ε/2}. Lean a ensuite a sa disposition le maximum de \lean{N1} et \lean{N2} grâce à \lean{use Nat.max N1 N2}.
 
 Après toutes ces invocations et spécialisations, le but de la preuve est le suivant $$\forall n \geq max (N1,N2), d\ l\ (u\ n) \leq \varepsilon$$
@@ -944,7 +944,7 @@ On réécrit la composition de l'hypothèse \lean{hN1} pour faire correspondre l
 
 \subsubsection{Théoreme du point fixe de Banach Picard}
 
-Il reste a montrer le théorème central de ce chapitre : le théorème du point fixe contractant de Banach picard.
+Il reste à montrer le théorème central de ce chapitre : le théorème du point fixe contractant de Banach picard.
 
 \begin{minted}{lean}
 theorem Point_Fixe_Contractant (f : X -> X) : (Complet X ∧ contractant f ∧ ∀ u :ℕ -> X, ∀ n , f (u n) = u (Nat.succ n)) -> (∃!x:X,f x =x ∧ lim u x) :=
