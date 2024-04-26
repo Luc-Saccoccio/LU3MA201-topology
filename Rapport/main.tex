@@ -942,6 +942,7 @@ Tout d'abord, nous prouvons que le \lean{n} invoqué au début de la preuve est 
 On réécrit la composition de l'hypothèse \lean{hN1} pour faire correspondre les expressions : \lean{(u ∘ f) n)} et \lean{u(f n)}. Enfin, la tactique \lean{linarith} vient synthétiser les hypothèses \lean{hN1} et \lean{hN2} pour conclure au but.
 
 
+<<<<<<< HEAD
 \subsubsection{Théoreme du point fixe de Banach Picard}
 
 Il reste à montrer le théorème central de ce chapitre : le théorème du point fixe contractant de Banach picard.
@@ -972,6 +973,8 @@ theorem Point_Fixe_Contractant (f : X -> X) : (Complet X ∧ contractant f ∧ �
 
 
 
+=======
+>>>>>>> 7caf939 (Version finale (avec fautes))
 \subsection{Compacité}
 
 La notion de compacité a émergé au 19 ème siècle dans le contexte du développement de l'analyse mathématique afin de mieux formaliser les notions de convergences et de continuité. Nous choisissons de la définir d'abord de manière séquentielle plus simple et adaptée aux espaces métriques. Puis nous montrerons les grandes lignes de son lien avec la continuité, la fermeture et la complétude. Enfin nous nous orienterons vers une définition ensembliste qui s'approche de celle qui étend la compacité aux espaces topologiques quelconques. Cependant nous n'aborderons pas la topologie générale qui n'est pas au programme de L3.
@@ -1164,7 +1167,7 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
 
     \item Par la compacité de\lean{K} nous posons une suite de \lean{K} coïncidant avec \lean{x} et nous lui associons la suite extraite convergente \lean{y} composé par \lean{f}.\\
 
-    \itemLa limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coïncide avec cette dernière.\\
+    \item La limite \lean{l} de cette sous-suite est dans \lean{K} mais par \lean{sequential_closure} dans le sens indirect nous montrons que \lean{l} est dans l'adhérence de \lean{H}, en effet la composé \lean{x} par \lean{f} est une suite de \lean{H} et elle converge vers \lean{l} la limite de la sous-suite de \lean{y} puisque elle coïncide avec cette dernière.\\
 
     \item Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fermé avec son adhérence. Donc \lean{l} est dans \lean{H}.\\
 
@@ -1250,17 +1253,18 @@ lemma image_continuous_compact (f : X → Y) (f_continuous: Continuous f) (h_com
 
     \item Comme précédemment, nous montrons qu'un ensemble est compact en introduisant une suite, il faut alors construire une sous suite qui converge dans cette ensemble. Ici l'ensemble est \lean{Set.image f Set.univ}, ainsi par définition de l'image direct, nous construisons d'abord la suite \lean{x}.
 
-    \itemLa tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.
+    \item La tactique \lean{obtain} introduit une sous suite de \lean{x} convergente, dont l'existence est déduite de \lean{h_compact x}.
 
     \item La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y} par composition et \lean{f l} pour la limite de cette sous suite. Le but se réduit à vérifier que \lean{j} et \lean{f l} sont de bons candidats.
 
-    \item On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriété est vrai pour tout élément de \lean{X}. 
+    \item On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriété est vrai pour tout élément de \lean{X}.
 
-    \item Avant d'appliquer cette propriété, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. 
+    \item Avant d'appliquer cette propriété, \lean{apply And.intro} permet de séparer les arguments du but \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}.
 
     \item Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de \lean{f} en écrivant \lean{y} comme la composée de \lean{f} par \lean{x}. Cependant, \lean{limite} est prouvé pour \lean{lim'} car la sous-suite écrite sous cette forme est à valeur dans \lean{Y}. Or nous voulons qu'elle converge dans \lean{Set.image f Set.univ} de type \lean{Set Y}.
 
     \item Ainsi, on montre que \lean{lim} coïncide trivialement avec \lean{lim'} par une preuve en epsilon.
+\end{itemize}
 
 \vspace{\baselineskip}
 
@@ -1334,7 +1338,7 @@ lemma h_suite (X: Type) (H : (∀ A : Finset X, ∃ x : X, x ∉ A)) : (∃ u : 
     Nous nommons enfin \lean{h_rec} la relation de récurrence vérifiée par cette suite.
 
     \item \textbf{Résolution du goal }
-    
+
     Rappelons que notre but est \lean{∃ u, ∀ (k l : ℕ), k < l → u k ≠ u l}. Nous devons alors montrer que la fonction composée \lean{new ∘ f_set} convient. Nous fixons \lean{k},\lean{kl} tels que \lean{ k<l} et par récurrence sur \lean{l} nous montrons \lean{h_in: new (f_set k) ∈ f_set l}. Ensuite, \lean{intro j} suppose l'égalité \lean{new(f_set k)=new (f_set l)} et le but est alors de montrer que c'est faux. La tactique \lean{rw} remplace \lean{new (f_set k)} par \lean{new (f_set l)} dans \lean{h_in}. Nous obtenons alors une contradiction avec \lean{ h_new ( f_set l) }.
 \end{itemize}
 
@@ -1448,17 +1452,13 @@ Ici s'achève nos travaux sur la compacité, ce dernier lemme pourrait être uti
 
 \subsection{Perspectives d’approfondissement}
 
-Plusieurs résultats du cours peuvent encore être implémentés, en particulier les deux parties sur la connexité les espaces vectoriels normés, mais aussi le théorème du point fixe de Picard-Banach. Par ailleurs, plusieurs preuves gagneraient à être plus concises et ainsi gagner en lisibilité, sans pour autant en augmenter le complexité. Dans de nombreux cas, nous furent limité par notre connaissance encore partielle de Lean et de toutes ses tactiques, mais surtout de Mathlib. Enfin, pour aller plus loin, une évolution possible de notre code pourrait être de l'incorporer au logiciel D$\exists\forall$DUCTION \cite{deaduction}.
+Plusieurs résultats du cours peuvent encore être implémentés, en particulier les deux parties sur la connexité les espaces vectoriels normés, mais aussi le théorème du point fixe de Picard-Banach. Par ailleurs, plusieurs preuves gagneraient à être plus concises et ainsi gagner en lisibilité, sans pour autant en augmenter le complexité. Dans de nombreux cas, nous avons été limité par notre connaissance encore partielle de Lean et de toutes ses tactiques, mais surtout de Mathlib. Enfin, pour aller plus loin, une évolution possible de notre code pourrait être de l'incorporer au logiciel D$\exists\forall$DUCTION \cite{deaduction}.
 
 
 \subsection{Intérêt pédagogique}
 
 Lean force l'utilisateur à être formel dans ses preuves : il faut introduire les hypothèses avant de les utiliser, préciser quel théorème ou quel règle (de réécriture ou de simplification par exemple) a été utilisée, et conclure proprement chaque raisonnement. C'est néanmoins relativement agréable : l'interface de l'éditeur montre l'avancement de la preuve, la validité des arguments ainsi que les hypothèses introduites, et les tactiques permettent de rendre plus flexible le passage d'une étape du raisonnement à une autre. Autrement dit, excepté dans certains cas (comme par exemple la construction d'une suite par récurrence), l'usage de Lean force le mathématicien à être formel, sans pour autant bloquer le processus d'une preuve en étant trop strict. Cet outil nous a amené à réfléchir à l'importance des hypothèses et des arguments "implicites" (sous-entendus) dans les preuves que nous lisons ou faisons; mais aussi à nous intéresser aux axiomes de base et aux règles d'inférence qui fondent la base des systèmes logiques que nous utilisons.
 
-
-\subsection{Compétences acquises grâce au travail de groupe}
-
-Nous avons découvert l’importance d’une bonne communication lors d’un travail en groupe. Les réunions régulières nous permettaient de faire le point sur l’avancement de chacun. Nous communiquions aussi à distance pour demander de l’aide ou en apporter. Cependant nous avons choisi dès le début de répartir le code entre nous trois. Cette répartition aurait été plus efficace si nous avions préalablement appris ensemble a coder. La prise en main de Lean s’est en effet étalé sur une très longue période car chacun apprenait de son coté. Nous aurions alors pu aller encore plus loin dans la formalisation de la topologie en Lean.
 
 \newpage
 
