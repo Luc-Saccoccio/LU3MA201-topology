@@ -16,12 +16,8 @@ class MetricSpace (α : Type u) where
 
 open MetricSpace
 
-def dist' (α : Type u) [MetricSpace α] : α → α → ℝ :=
-  fun x y => dist x y
-
 notation "d" => dist
-notation "d_[" α "]" => dist' α
-
+notation "d_[" α "]" => @dist α
 
 section Fundamentals
 
@@ -58,7 +54,7 @@ lemma open_ball_is_open : ∀ x : X, ∀ r > 0, is_open B(x, r) :=
     intros x r _ y y_in
     set ε := r - d x y with hε
     use ε
-    apply And.intro
+    constructor
     . simp [open_ball] at y_in
       linarith only [hε, y_in]
     . intros z z_in
@@ -106,7 +102,7 @@ lemma interior_is_open {E : Set X} : is_open (Interior E) := union_open_is_open 
 @[simp]
 lemma metric_interior {E : Set X} {x : X} : x ∈ Interior E ↔ ∃ r > 0, B(x, r) ⊆ E :=
   by
-    apply Iff.intro
+    constructor
     . intro x_in_E
       rcases x_in_E with ⟨U, ⟨U_open, U_sub_E⟩, x_in_U⟩
       obtain ⟨r, r_pos, ball_in_U⟩ : ∃ r > 0, B(x, r) ⊆ U := U_open x x_in_U
@@ -132,7 +128,7 @@ def Continuous (f : X → Y) : Prop := ∀ x : X, continuous_on f x
 
 theorem topologic_continuity (f : X → Y) : Continuous f ↔ (∀ U, is_open U → is_open (f ⁻¹' U)) :=
   by
-    apply Iff.intro
+    constructor
     . intro h U U_open x₀ x₀_in_reci_f
       obtain ⟨ε, ε_pos, ball_in_U⟩ : ∃ ε > 0, B(f x₀, ε) ⊆ U := U_open (f x₀) x₀_in_reci_f
       rcases (h x₀) ε ε_pos with ⟨δ, δ_pos, H⟩
@@ -144,9 +140,6 @@ theorem topologic_continuity (f : X → Y) : Continuous f ↔ (∀ U, is_open U 
       let U : Set Y := B(f x₀, ε)
       have U_open := open_ball_is_open (f x₀) ε ε_pos
       have recU_open := H₁ U U_open
-      have f_in : f x₀ ∈  B(f x₀, ε) := by  --j'ai rajouté cette hypothèse pour que la tactique simpa fonctionne
-        simp
-        exact ε_pos
       have x_in_recU: x₀ ∈ f⁻¹' U := by simpa
       obtain ⟨δ, δ_pos, H₂⟩ : ∃ δ > 0, B(x₀, δ) ⊆ f⁻¹' U := recU_open x₀ x_in_recU
       use δ, δ_pos
@@ -156,10 +149,10 @@ theorem topologic_continuity (f : X → Y) : Continuous f ↔ (∀ U, is_open U 
 -- j'ai cru avoir besoin de ce lemme pour prouver le critère de continuité séquentielle, mais finalement je l'ai fait sans
 lemma topologic_continuity_on (x₀ : X) (f : X → Y) : continuous_on f x₀ ↔ (∀ U, is_open U ∧  f x₀ ∈ U → ∃ V, is_open V ∧ x₀∈ V ∧ V ⊆  (f ⁻¹' U)) := by
   apply Iff.intro
-  · intro h U hU 
+  · intro h U hU
     obtain ⟨ε, ε_pos, ball_in_U⟩ : ∃ ε > 0, B(f x₀, ε) ⊆ U := hU.1 (f x₀) hU.2
     rcases (h ) ε ε_pos with ⟨δ, δ_pos, H⟩
-    use B(x₀, δ) 
+    use B(x₀, δ)
     apply And.intro
     apply open_ball_is_open x₀ δ δ_pos
     apply And.intro
@@ -171,17 +164,17 @@ lemma topologic_continuity_on (x₀ : X) (f : X → Y) : continuous_on f x₀ �
 
   · intro H₁ ε ε_pos
     have U_open := open_ball_is_open (f x₀) ε ε_pos
-    have h : is_open  B(f x₀, ε) ∧ f x₀ ∈  B(f x₀, ε)  := by 
+    have h : is_open  B(f x₀, ε) ∧ f x₀ ∈  B(f x₀, ε)  := by
       apply And.intro
       · exact U_open
-      · simp 
+      · simp
         exact ε_pos
     have recU_open := H₁ B(f x₀, ε) h
     let U : Set Y := B(f x₀, ε)
     obtain ⟨ V , hV⟩ := recU_open
-    unfold is_open at hV 
+    unfold is_open at hV
     obtain ⟨δ, δ_pos, H₂⟩ : ∃ δ > 0, B(x₀, δ) ⊆ V := (hV.1) x₀ hV.2.1
-    have H₃: B(x₀, δ) ⊆ f⁻¹' U := by 
+    have H₃: B(x₀, δ) ⊆ f⁻¹' U := by
       exact subset_trans H₂ hV.2.2
     use δ, δ_pos
     intro x hx
@@ -192,11 +185,11 @@ variable {Z : Type u} [MetricSpace Z]
 theorem comp_continuous (f : X → Y) (g : Y → Z) : Continuous f → Continuous g → Continuous (g ∘ f) :=
   by
     intro f_cont g_cont
-    rw [topologic_continuity]
+    rw [topologic_continuity] at *
     intro V V_open
     let U := g⁻¹' V
-    have U_open : is_open U := Iff.mp (topologic_continuity g) g_cont V V_open
-    exact Iff.mp (topologic_continuity f) f_cont U U_open
+    have U_open : is_open U := g_cont V V_open
+    exact f_cont U U_open
 
 def Lipschitz (f : X → Y) : Prop :=
   ∃ k > 0, ∀ x x' : X, d_[Y] (f x) (f x') ≤ k * d_[X] x x'
@@ -204,13 +197,13 @@ def Lipschitz (f : X → Y) : Prop :=
 theorem lipschitz_implies_continuous (f : X → Y) : Lipschitz f → Continuous f :=
   by
     intro ⟨k, k_pos, h⟩
-    intro x₀  ε ε_pos
+    intro x₀ ε ε_pos
     use ε / k, div_pos ε_pos k_pos
     intro x hdx
     have h₁ : d_[Y] (f x₀) (f x) < k * (ε / k) := lt_of_le_of_lt (h x₀ x) (mul_lt_mul_of_pos_left hdx k_pos)
     rw [mul_div_cancel' ε] at h₁
     . exact h₁
-    . linarith -- meh
+    . linarith
 
 end Continuity
 
@@ -228,7 +221,6 @@ lemma union_closed_is_closed : ∀ F G : Set X, is_closed F → is_closed G → 
     rw [is_closed, Set.compl_union F G]
     exact inter_open_is_open Fᶜ Gᶜ F_closed G_closed
 
--- TODO: clean proof
 lemma inter_closed_is_closed (I : Set (Set X)) : (∀ F ∈ I, is_closed F) → is_closed (⋂₀ I) :=
   by
     intro h
@@ -236,7 +228,7 @@ lemma inter_closed_is_closed (I : Set (Set X)) : (∀ F ∈ I, is_closed F) → 
     have h₁ : ∀ U ∈ compl '' I, is_open U :=
       by
         intro U hU
-        dsimp [Set.image] at hU
+        simp [Set.image] at hU
         obtain ⟨F, hF⟩ := hU
         rw [←hF.right]
         exact h F hF.left
@@ -318,11 +310,5 @@ variable {X : Type u} [MetricSpace X]
 -- On définit une suite comme une fonction u : ℕ → X
 
 def lim {K:Set X} (x : ℕ → K) (l : X) := ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
-
-lemma sequential_closure (E : Set X) (l : X) : l ∈ Closure E ↔ ∃ x : ℕ → E , lim x l :=
-  by
-    apply Iff.intro
-    . sorry
-    . sorry
 
 end sequences

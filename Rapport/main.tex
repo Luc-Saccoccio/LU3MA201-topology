@@ -18,13 +18,26 @@
 \usepackage{array}
 \usepackage{hyperref}
 \usepackage{minted}
+\usepackage{newunicodechar}
 
 % Required for UTF-8 characters in minted env
 \setmonofont{FiraCode}
 
-\setminted[lean]{linenos, fontsize=\footnotesize}
+\usemintedstyle{tango}  % a nice, colorful theme
+\setminted[lean]{linenos, breaklines, fontsize=\footnotesize}
+\setminted[haskell]{linenos, fontsize=\footnotesize}
+\newcommand{\lean}[1]{\mintinline[breaklines]{lean}{#1}}
+\newcommand{\haskell}[1]{\mintinline{haskell}{#1}}
 
-\newcommand{\lean}[1]{\mintinline{lean}{#1}}
+\newunicodechar{∘}{\circ}
+\newunicodechar{▸}{\blacktriangleright}
+\newunicodechar{↦}{\mapsto}
+\newunicodechar{ᶜ}{\textsuperscript{c}}
+\newunicodechar{ᵉ}{\textsuperscript{e}}
+\newunicodechar{ᵤ}{\textsubscript{u}}
+\newunicodechar{ᵥ}{\textsubscript{v}}
+\newunicodechar{⋂}{\ensuremath{\bigcap}}
+\newunicodechar{⋃}{\ensuremath{\bigcup}}
 
 \hypersetup{
     colorlinks=true,
@@ -49,7 +62,7 @@
     \begin{center}
         {\Huge Démonstration assistée par ordinateur\\}
         \vspace{0.5cm}
-        {\huge Rapport de mi-parcours\\}
+        {\huge Rapport final\\}
 
         \vspace{1.5cm}
 
@@ -108,6 +121,7 @@ L'histoire est parcellée de péripéties, mais nous finirons cet historique en 
 
 Ce projet a pour but d'implémenter une partie de notre cours de topologie métrique (LU3MA260) dans l'assistance de preuve \href{https://lean-lang.org/}{Lean}. Cela implique donc de commencer par définir les objets étudiés (espaces métriques, boules, applications continues...) puis d'encoder et de vérifier nos théorèmes et preuves.
 
+\newpage
 \section{Lean}
 
 Pour ce projet, nous utiliserons l'assistant de preuves Lean (version 4.5.0 lors de l'écriture de ce rapport). Il y a plusieurs raisons pour ce choix parmi lesquelles :
@@ -127,11 +141,194 @@ Lean est un langage open-source développé depuis 2013 basé sur le calcul des 
 
 \subsection{Cycle de développement}
 
-Un projet Lean commence par la création d'un dossier dédié à l'aide du programme \texttt{lake}. On peut alors préciser que l'on compte utiliser Mathlib dans le fichier \texttt{lakefile.lean}. Ensuite on peut commencer à programmer ou prouver des résultats. Seul le second cas nous intéresse. L'arborescence d'un projet Lean consiste en un unique dossier portant le nom du projet, lequel contient un ensemble de dossiers et de fichiers Lean.
+\subsubsection{Arborescence}
+
+Un projet Lean commence par la création d'un dossier dédié à l'aide du programme \lean{lake}. On peut alors préciser que l'on compte utiliser Mathlib dans le fichier \lean{lakefile.lean}. Ensuite on peut commencer à programmer ou prouver des résultats. Seul le second cas nous intéresse. L'arborescence d'un projet Lean consiste en un unique dossier portant le nom du projet, lequel contient un ensemble de dossiers et de fichiers Lean. L'arborescence d'un projet est un premier outil pour structurer un ensemble de résultats, on choisit de diviser les résultats en plusieurs fichiers et dossiers suivant le plus souvent les champs ou les domaines plus spécifiques auxquels ils appartiennent. Par exemple, si on souhaitait élaborer la topologie depuis les axiomes ensemblistes, on devrait développer un ensembles de lemmes accessoires en logique (n'étant pas dans la bibliothèque standard), les bases de la théorie des ensembles et enfin les bases de la topologie générale (en oubliant la construction des ensembles usuels), une arborescence possible serait :
+
+\newpage
+\begin{minted}{text}
+Project
+├── Logic
+│   └── Basic.lean
+├── Set
+│   ├── Basic.lean
+│   ├── Functions.lean
+│   └── Indexed.lean
+└── Topology
+    ├── Basic.lean
+    ├── Separation
+    │   └── Basic.lean
+    ├── Compactness
+    │   └── Basic.lean
+    ...
+\end{minted}
+
+\subsubsection{Structure d'un fichier}
+
+Un fichier Lean suit le plus souvent une certaine structure :
+
+\begin{minted}{lean}
+import ...
+
+universe ...
+
+variable ...
+
+...
+
+section ...
+
+end ...
+\end{minted}
+
+Tout d'abord, les importations de fichiers. L'idée est la même qu'un \mintinline[fontsize=\footnotesize]{python}{import} en Python ou \mintinline[fontsize=\footnotesize]{c}{#include} en C, cette commande importe l'ensemble des résultats du fichier voulue dans le fichier dans lequel se trouve la commande. Le nom du fichier à importer correspond à son chemin dans l'arborescence. Pour reprendre l'arborescence ci-dessus, on peut par exemple importer les résultat en logique avec \lean{import Project.Logic.Basic}.
+
+On déclare ensuite un ensemble d'\textit{univers}. Un univers est un type qui classifie un ensemble de types. Les plus communs sont \lean{Type} et \lean{Prop}, le premier classifiant un ensemble de types "ordinaires", comme \lean{Nat}, \lean{String} ou \lean{Int → Nat}, et le second classifiant des propositions, comme \lean{2 = 3} et \lean{∀ x y z : ℕ, (x * y) * z = x * (y * z)}. Or il existe de nombreux autres univers puisque par exemple, \lean{Type} n'est classifié ni par \lean{Prop}, ni par lui même. En effet, dans les versions de la théorie des types dépendants dans lesquelles il est possible d'assigner \lean{Type} comme type à \lean{Type}, on aboutit à la construction d'un terme de type \lean{∀ p : *, p} qui par la correspondance de Curry-Howard, signifie que toute proposition est démontrable, rendant la théorie inconsistante. Cette contradiction est nommée paradoxe de Girard \cite{coquand}, et c'est l'équivalent en théorie des types du paradoxe de Russell en théorie des ensembles. Il existe donc une classification des univers avec des entiers naturels : \lean{Type} est de type \lean{Type 1}, qui lui même est de type \lean{Type 2}, et ainsi de suite. Le type d'une fonction est donc l'univers le plus petit dans lequel tout ses arguments existent : \lean{Nat → Nat} a pour type \lean{Type} et \lean{Type 3 → Type 5} a pour type \lean{Type 6}, à l'exception des fonctions ayant pour type de retour \lean{Prop} qui sont toujours de type \lean{Prop}. Déclarer un univers signifie donc choisir un univers quelconque et démontrer l'ensemble des résultats au sein de cet univers. Cela permet de généraliser un grand nombre de résultats indépendamment de l'univers choisi.
+
+On peut aussi déclarer un ensemble de variables avec \lean{variable}. C'est équivalent en mathématiques à dire "On se donne ...". Il est possible d'ajouter des instances de classe aux types choisis, par exemple pour un monoïde :
+
+\begin{minted}{lean}
+variable {M : Type u} [Monoid M]
+\end{minted}
+
+On peut alors commencer à énoncer des définitions, des résultats et les démontrer. On peut aussi définir une \lean{section} (potentiellement anonyme), c'est à dire un ensemble du fichier dans lequel on pourra définir d'autres variables et univers qui n'existeront qu'au sein de cette section, et que l'on devra référencer avec \lean{Name.resultat} avec \lean{Name} le nom de la section et \lean{resultat} l'objet voulu, ou en "ouvrant" la section préalablement avec \lean{open Name}.
+
+\subsubsection{Énoncés et preuves}
+
+Un énoncé est un terme de type \lean{Prop}. Par exemple :
+
+\begin{minted}{lean}
+def Even (n : ℕ) : Prop := ∃ m : ℕ, n = 2 * m
+\end{minted}
+
+On peut définir des théorèmes, lemmes et exemples avec \lean{theorem}, \lean{lemma}, \lean{example}. Chaque théorème ou lemme a un nom, un type (la proposition) et une preuve :
+
+\begin{minted}{lean}
+theorem even_even : ∀ n : ℕ, Even (n + n) := sorry
+\end{minted}
+
+Chaque preuve a un but, c'est à dire la proposition à prouver, et un contexte : l'ensemble des hypothèses de la preuve. Le contexte ne contient pas les autres résultats du fichier, qui sont néanmoins utilisables. L'équivalent mathématique du contexte correspond à l'ensemble des hypothèses faites et des variables définis ("On prend ...", "On se donne ..."). Bien que certaines preuves puissent être faites sans rentrer dans un contexte de preuves (dans les cas où le résultat est une conclusion d'un autre théorème par exemple), la majorité des preuves commencent par \lean{by} qui permet de créer un contexte et d'entrer dans un environnement de preuves. On utilise ensuite un ensemble de tactiques et de résultats précédents pour prouver le but.
+
+%TODO: Preuve détaillée
 
 \subsection{Méta programmation}
 
+La capacité pour Lean d'utiliser des caractères Unicode repose sur l'introduction de syntaxe. Mais Lean est en réalité bien plus puissant. Bien que les mécanismes internes sur lesquels reposent l'ensemble des fonctionnalités de méta programmation soient trop complexe pour ce document, on pourra se référer au livre \cite{meta_lean}. Nous allons néanmoins examiner deux exemples de méta programmation en Lean (sans pour autant en explorer les technicités).
 
+\subsubsection{Notations}
+
+Introduire une notation permet d'écrire en Lean des mathématiques comme on les écrirait sur papier. Ainsi, une union d'ensembles $\bigcup$, une somme indexée $\Sigma$, ou même une boule ouverte centrée en $x$ d'un rayon $r$ $B(x, r)$; sont des notations qui ne sont pas natives en Lean, mais que l'on construit à l'aide des outils de méta programmation fournis. Il y a deux étapes : introduire une syntaxe puis une sémantique. Autrement dit, il faut d'abord indiquer quel pattern doit être cherché, pour en suite exprimer ce qu'il signifie. Un exemple simple :
+
+\begin{minted}{lean}
+macro x:ident ":" t:term " ↦ " y:term : term => do `(fun $x : $t => $y)
+\end{minted}
+
+Ainsi l'expression \lean{x : ℕ ↦ 2 * x} devient grâce à cette macro \lean{fun x : ℕ => 2 * x}. \lean{x} est un identifiant, \lean{t} est un type (on utilise \lean{term} pour reconnaitre un terme au sens général) et \lean{y} est une expression (éventuellement contenant l'identifiant \lean{x}). On remarque que la syntaxe et la sémantique sont introduites en une seule commande, \lean{macro}. Un autre exemple pour introduire des notations ensemblistes :
+
+\begin{minted}{lean}
+open Std.ExtendedBinder in
+syntax "{" extBinder " | " term "}" : term
+
+macro_rules
+  | `({ $x:ident | $p }) => `(setFrom (fun $x:ident => $p))
+  | `({ $x:ident : $t | $p }) => `(setFrom (fun $x:ident : $t => $p))
+  | `({ $x:ident $b:binderPred | $p }) => `(setFrom (fun $x:ident => satisfies_binder_pred% $x $b ∧ $p))
+
+open Std.ExtendedBinder in
+macro (priority := low) "{" t:term " | " bs:extBinders "}" : term =>
+  `({x | ∃ᵉ $bs:extBinders, $t = x})
+\end{minted}
+
+On introduit ici une syntaxe générale \lean{"{" extBinder " | " term "}"}, et selon la forme du premier terme, on associe une sémantique particulière à chaque cas :
+\begin{itemize}
+    \item \lean{{ $x:ident | $p }}, c'est le schéma de compréhension classique $\{x\ \mid\ p(x)\}$.
+    \item \lean{{ $x:ident : $t | $p}}, on traite ici le cas avec une annotation de type.
+    \item \lean{{ $x:ident $b:binderPred | $p }}, c'est le schéma de compréhension $\{p(x)\ \mid\ q(x)\}$. Il est interprété comme $\{x\ \mid\ p(x)\land q(x)\}$
+\end{itemize}
+
+On ajoute à cela le cas plus rare $\{f(x)\ \mid\ x\ :\ X\}$ avec l'option \lean{priority := low} pour souligner que ce cas doit être traité après avoir tenté les sémantiques précédentes, qui est équivalent à $\{y\ \mid\ \exists x\ :\ X, y = f x\}$. On peut aussi mentionner les union et intersection ensemblistes indexées par un ensemble :
+
+\begin{minted}{lean}
+open Std.ExtendedBinder in
+syntax "⋂ (" extBinder "), " term:60 : term
+
+macro_rules
+  | `(⋂ ($x:ident : $t), $p) => `(iInter (fun $x:ident : $t => $p))
+
+open Std.ExtendedBinder in
+syntax "⋃ (" extBinder "), " term:60 : term
+
+macro_rules
+  | `(⋃ ($x:ident : $t), $p) => `(iUnion (fun $x:ident : $t => $p))
+\end{minted}
+
+Le principe est le même, on introduit une syntaxe puis on explicite la sémantique. Il y a néanmoins une nuance supplémentaire. Dans les schémas de compréhension d'un ensemble, il n'y a pas d'ambigüité possible lors de la reconnaissance du pattern, puisque la syntaxe est "bornée" par les caractères \lean{\{} et \lean{\}}, or dans le cas présent il n'y a pas de délimitation à droite. C'est pourquoi on précise la priorité de l'opérateur (qui permet de définir la priorité des opérations, operator precedence pour le terme anglais) avec \lean{term:60}. Une analogie en mathématique est la priorité de $\times$ sur $+$ ($\times$ a un ordre supérieur à $+$). À noter que les commandes \lean{notation} (et ses cas plus spécifiques \lean{infix}, \lean{infixl}, \lean{infixr} et \lean{prefix}) supportent aussi l'ajout du suffixe \lean{:n} avec \lean{n} l'ordre de la priorité. Ainsi, il n'y a pas d'ambigüité possible et on peut choisir (en ayant connaissance de l'ordre des opérations usuelles, comme l'application de fonctions ou \lean{∧}) ce qui est reconnu par cette syntaxe.
+
+Il devient alors possible d'écrire \lean{⋃ (i : ι), s i} pour $\bigcup_{i\in\iota} S_i$ (puisqu'une famille d'ensembles indexés par $\iota$ est une fonction de $\iota$ dans les parties de l'union de tout les ensembles considérés) et d'utiliser les notations \lean{{2*n | n : ℕ}} ou \lean{⋃(n : ℕ), {n}} (et elles ont bien le sens voulu).
+
+\subsubsection{Tactiques}
+
+Les tactiques sont l'autre force de Lean. Une tactique est un mécanisme d'automatisation d'un certain nombre d'étapes de la preuve. Parmi les tactiques usuelles, on peut citer :
+\begin{itemize}
+    \item \lean{intro} : Elle introduit une ou plusieurs hypothèses dans le contexte (potentiellement avec un nom), et modifie le but pour enlever les hypothèses dans la chaîne d'implications.
+    \item \lean{use} : Utilisée pour prouver un but du type \lean{∃x, p x}, elle fixe \lean{x} et modifie le but en \lean{p x}.
+    \item \lean{exact} : Clôt un but avec une preuve ayant cette conclusion.
+    \item \lean{have} : Nomme un résultat intermédiaire, qui doit néanmoins être prouvé.
+    \item \lean{assumption} : Clôt un but avec une hypothèse du contexte
+    \item \lean{constructor} : Applique un constructeur ("ou" logique, "et" logique, double implication...) et crée un ensemble de buts correspondants
+    \item \lean{sorry} : Clôt un but sans le prouver.
+\end{itemize}
+
+La tactique \lean{sorry} ne prouve rien en tant que tel, elle marque juste la preuve comme terminé et utilisant l'instruction \lean{sorry}. Cela évite des erreurs lors de la vérification mais prévient néanmoins l'utilisateur que la preuve n'est pas terminée.
+
+Il y a un ensemble de tactiques qui peuvent être utilisées sur des hypothèses précises en place du but :
+\begin{itemize}
+    \item \lean{apply} : Applique une propriété au but (peut introduire des buts secondaires).
+    \item \lean{rw} : Réécrit le but avec un ou plusieurs résultats de la forme \lean{a = b} ou \lean{a ↔ b}.
+    \item \lean{simp} : Simplifie(au sens large) une expression avec un ensemble de propositions choisies augmenté d'un ensemble de propositions fournies par l'utilisateur.
+\end{itemize}
+
+Par défaut seul le but est modifié, mais on peut préciser une hypothèse, un ensemble d'hypothèses ou toutes les hypothèses, ainsi que le but; que la tactique modifiera avec le suffixe \lean{at h}, \lean{at [h1, h2]}, \lean{at *} respectivement.
+
+\vspace{\baselineskip}
+Une tactique est une macro ou une commande de type \lean{tactic}. Pour les cas les plus simples, une macro suffit. Par exemple, une tactique résolvant les cas triviaux d'égalités avec plusieurs constructeurs logiques pourrait être :
+
+\begin{minted}{lean}
+syntax "custom_trivial" : tactic
+
+macro_rules
+| `(tactic| custom_trivial) => `(tactic| constructor <;> custom_trivial)
+
+example : 42 = 42 ∨ 1 + 1 = 2 ∧ 2 ^ 2 = 2 * 2 := by custom_trivial
+\end{minted}
+
+Où \lean{<;>} est un opérateur de tactiques tel que \lean{a <;> b} applique \lean{a}, puis applique \lean{b} à tout les buts générés par \lean{a}. Les tactiques plus complexe, demandant par exemple d'agir directement sur le contexte ou la liste de buts doivent être écrites avec \lean{elab}. Nous reproduisons ici un exemple\footnote{L'essentiel est de comprendre \textit{l'idée} plutôt que le code. Les prérequis nécessaires sont détaillés dans le livre cité. Pour le lecteur intéressé, le code est néanmoins expliqué de façon plus détaillée en annexe.} tiré de Metaprogramming in Lean 4 \cite{meta_lean} :
+
+\begin{listing}[H]
+    \begin{minted}{lean}
+elab "custom_assump" : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let goal ←Lean.Elab.Tactic.getMainGoal
+    let goalType ←Lean.Elab.Tactic.getMainTarget
+    let ctx ←Lean.MonadLCtx.getLCtx
+    let option_matching_expr ←ctx.findDeclM? fun decl: Lean.LocalDecl => do
+      let declExpr := decl.toExpr
+      let declType ←Lean.Meta.inferType declExpr
+      if ←Lean.Meta.isExprDefEq declType goalType
+        then return Option.some declExpr
+        else return Option.none
+    match option_matching_expr with
+    | some e => Lean.Elab.Tactic.closeMainGoal e
+    | none =>
+      Lean.Meta.throwTacticEx `custom_assump goal
+        (m!"unable to find matching hypothesis of type ({goalType})")
+    \end{minted}
+    \label{code:custom_assump}
+\end{listing}
+
+Cette tactique reproduit la tactique \lean{assumption} qui clôt un but avec une hypothèse ayant le même type. Le principe est assez simple : la tactique récupère le but pour obtenir son type, récupère le contexte et itère à travers chaque hypothèse pour en trouver une ayant le même type que le but. Si c'est le cas, la tactique clôt la preuve avec cette tactique, sinon elle prévient l'utilisateur qu'aucune hypothèse du type voulu n'a été trouvée.
+
+\newpage
 \section{La topologie métrique en Lean}
 
 \subsection{Contexte et mise en place}
@@ -148,9 +345,11 @@ Le cours de topologie LU3MA260\cite{topology_memo} est divisé 5 parties et 2 ap
     \item Appendice II : quelques schémas
 \end{itemize}
 
-Nous laisserons de côté les appendices ainsi que la dernière section sur les espaces vectoriels normés et les espaces de Banach.
+Nous laisserons de côté les appendices ainsi que les deux dernières sections sur la connexité, les espaces vectoriels normés et les espaces de Banach.
 
 \subsection{Espaces métriques}
+
+\subsubsection{Premières définitions}
 
 On commence par définir un espace métrique. C'est une classe de types sur lesquels on peut définir une "distance", c'est à dire la donnée de l'application et des propriétés qu'elle vérifie :
 
@@ -165,7 +364,14 @@ class MetricSpace (α : Type u) where
 variable {X : Type u} [MetricSpace X]
 \end{minted}
 
-La dernière instruction, \lean{variable}, permet de définir dans le contexte (soit le fichier, soit la \lean{section} dans laquelle on se trouve) des variables. Ici, nous nous sommes donnés un type \lean{X} dans l'univers \lean{u}, ainsi qu'une instance de la classe \lean{MetricSpace} pour le type \lean{X}. En termes mathématiques, nous nous sommes donnés un espace métrique $X$.
+La dernière instruction, \lean{variable}, permet de définir dans le contexte (soit le fichier, soit la \lean{section} dans laquelle on se trouve) des variables. Ici, nous nous sommes donnés un type \lean{X} dans l'univers \lean{u}, ainsi qu'une instance de la classe \lean{MetricSpace} pour le type \lean{X}. En termes mathématiques, nous nous sommes donnés un ensemble $X$ ainsi qu'une structure d'espace métrique sur $X$.
+
+On définit aussi, car cela sera utile dès que l'on manipulera plusieurs espaces métriques distincts, deux notations plus pratiques pour la distance :
+
+\begin{minted}{lean}
+notation "d" => dist
+notation "d_[" α "]" => @dist α
+\end{minted}
 
 On définit ensuite les boules ouvertes et on introduit la notation usuelle $B(x, r)$ pour la boule de rayon $r$ centrée en $x$. Le type \lean{Set X} est le type des ensembles à valeurs dans \lean{X}.
 
@@ -204,7 +410,7 @@ lemma open_ball_is_open : ∀ x : X, ∀ r > 0, is_open B(x, r) :=
     intros x r _ y y_in
     set ε := r - d x y with hε
     use ε
-    apply And.intro
+    constructor
     . simp [open_ball] at y_in
       linarith only [hε, y_in]
     . intros z z_in
@@ -217,11 +423,389 @@ Pour ce qui est de la preuve, elle suit le raisonnement suivant :
 
 \begin{itemize}
     \item On introduit les variables \lean{x}, \lean{r}, \lean{y} et l'hypothèse \lean{y_in} que \lean{y} est dans la boule \lean{B(x, r)}.
+    \item On défini le bon \lean{ε} et l'hypothèse \lean{hε} qui contient la définition de \lean{ε}, et on l'utilise pour démontrer que la boule est ouverte.
+    \item On prouve alors les deux buts :
+        \begin{itemize}
+            \item On montre que \lean{ε > 0} à l'aide de la définition de la boule ouverte et de \lean{linarith}
+            \item On montre l'inclusion des boules à l'aide de la définition par la distance d'une boule et de l'inégalité triangulaire, et on conclue avec \lean{linarith}
+        \end{itemize}
 \end{itemize}
 
-La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hypothèse que \lean{y} est dans la boule \lean{B(x, r)} (l'underscore après \lean{r} signifie simplement que l'on ne nomme pas l'hypothèse que \lean{r} est positif). On peut ensuite définir notre $ε$ ainsi que l'hypothèse \lean{hε} qui a pour type \lean{ε = r - d x y}. Puisque \lean{is_open U} a pour type \lean{∀ x ∈ U, ∃ r > 0, B(x, r) ⊆ U}, il faut donc montrer \lean{∃ r > 0, B(x, r) ⊆ U}. Cette syntaxe signifie en réalité \lean{∃ r, r > 0 ∧ B(x, r) ⊆ U} (\lean{∃} étant une syntaxe pour le type inductif \lean{Exists} paramétré par \lean{w} et \lean{h}, l'élément et la propriété sur cet élément). On indique donc que l'on utilise \lean{ε} et il reste à montrer la positivité et l'inclusion de la boule. La positivité s'obtient en revenant à la définition d'une boule ouverte puis en appliquant la tactique \lean{linarith} qui résout un but à l'aide d'arithmétique linéaire.
+On démontre ensuite trois lemmes qui prouvent que les ouverts définis par les boules forment bien une topologie :
+
+\begin{minted}{lean}
+lemma union_open_is_open (I : Set (Set X)) : (∀ U ∈ I, is_open U) → is_open (⋃₀ I) :=
+  by
+    intro U_open x ⟨U, U_app_I, x_app_U⟩
+    obtain ⟨r, r_pos, ball_in_U⟩ : ∃ r > 0, B(x, r) ⊆ U :=
+      (U_open U) U_app_I x x_app_U
+    use r, r_pos
+    . exact Set.Subset.trans ball_in_U (Set.subset_sUnion_of_mem U_app_I)
+
+lemma inter_open_is_open : ∀ U V : Set X, is_open U → is_open V → is_open (U ∩ V) :=
+  by
+    intro U V U_open V_open x ⟨x_in_U, x_in_V⟩
+    obtain ⟨rᵤ, rᵤ_pos, ball_in_U⟩ : ∃ rᵤ > 0, B(x, rᵤ) ⊆ U := U_open x x_in_U
+    obtain ⟨rᵥ, rᵥ_pos, ball_in_V⟩ : ∃ rᵥ > 0, B(x, rᵥ) ⊆ V := V_open x x_in_V
+    use min rᵤ rᵥ, lt_min rᵤ_pos rᵥ_pos
+    . intro y y_in_ball
+      simp at y_in_ball
+      apply And.intro
+      . exact ball_in_U y_in_ball.left
+      . exact ball_in_V y_in_ball.right
+
+lemma space_open : is_open (Set.univ : Set X) :=
+  fun x _ => ⟨1, (And.intro zero_lt_one (Set.subset_univ B(x, 1)))⟩
+\end{minted}
+
+Le premier montre que l'union d'un ensemble quelconque d'ouvert est ouvert. La preuve est immédiate, il suffit de prendre un élément dans l'union et prendre la boule dans l'ouvert dans lequel se trouve l'élément, avant de conclure par transitivité de $\subseteq$. Le second montre que l'intersection de deux ouvert est ouverte. Il faut alors prendre deux boules dans chacun des ouverts puis on prend la boule de rayon minimal. Il suffit alors de démontrer que cette boule est incluse dans chacun des ouverts, ce qui est immédiat. Enfin, on démontre que l'espace tout entier est ouvert en prenant une boule de rayon 1.
+
+On définit enfin l'intérieur d'un ensemble comme l'union des ouverts inclus, qui est donc ouvert par le lemme montré plus haut. On note l'utilisation de \lean{simp_all} qui évite d'écrire \lean{(fun _ u_in => u_in.left)}.
+
+\begin{minted}{lean}
+def Interior (E : Set X) := ⋃₀ {U : Set X | is_open U ∧ U ⊆ E}
+lemma interior_is_open {E : Set X} : is_open (Interior E) := union_open_is_open {U : Set X | is_open U ∧ U ⊆ E} (by simp_all)
+\end{minted}
+
+On démontre enfin l'équivalence entre la définition topologique et la définition métrique de l'intérieur :
+
+\begin{minted}{lean}
+@[simp]
+lemma metric_interior {E : Set X} {x : X} : x ∈ Interior E ↔ ∃ r > 0, B(x, r) ⊆ E :=
+  by
+    constructor
+    . intro x_in_E
+      rcases x_in_E with ⟨U, ⟨U_open, U_sub_E⟩, x_in_U⟩
+      obtain ⟨r, r_pos, ball_in_U⟩ : ∃ r > 0, B(x, r) ⊆ U := U_open x x_in_U
+      use r, r_pos
+      trans U <;> assumption
+    . rintro ⟨r, r_pos, ball_in_E⟩
+      have ball_open : is_open B(x, r) := open_ball_is_open x r r_pos
+      use B(x, r)
+      simp_all
+\end{minted}
+
+On procède par double implication, en se donnant un élément de l'espace
+\begin{itemize}
+    \item Si l'élément est dans l'intérieur, il est dans un ouvert inclus dans E, donc il existe une boule ouverte centrée en ce point, incluse dans l'ouvert. Or cet ouvert est inclus dans E donc par transitivité, la boule est dans E.
+    \item S'il existe une boule centrée en l'élément, puisqu'une boule est ouverte, la boule est dans l'intérieur, est l'élément étant dans la boule, l'élément est dans l'intérieur.
+\end{itemize}
+
+\subsubsection{Continuité}
+
+On commence par définir la continuité en un point, puis la continuité globale :
+
+\begin{minted}{lean}
+def continuous_on (f : X → Y) (x₀ : X) : Prop :=
+  ∀ ε > 0, ∃ δ > 0, ∀ x, d_[X] x₀ x < δ → d_[Y] (f x₀) (f x) < ε
+
+def Continuous (f : X → Y) : Prop := ∀ x : X, continuous_on f x
+\end{minted}
+
+On démontre ensuite l'équivalence entre la définition métrique et la définition topologique de la continuité :
+
+\begin{minted}{lean}
+theorem topologic_continuity (f : X → Y) : Continuous f ↔ (∀ U, is_open U → is_open (f ⁻¹' U)) :=
+  by
+    constructor
+    . intro h U U_open x₀ x₀_in_reci_f
+      obtain ⟨ε, ε_pos, ball_in_U⟩ : ∃ ε > 0, B(f x₀, ε) ⊆ U := U_open (f x₀) x₀_in_reci_f
+      rcases (h x₀) ε ε_pos with ⟨δ, δ_pos, H⟩
+      use δ, δ_pos
+      intro x hx
+      suffices hh : f x ∈ B(f x₀, ε) from ball_in_U hh
+      exact H x hx
+    . intro H₁ x₀ ε ε_pos
+      let U : Set Y := B(f x₀, ε)
+      have U_open := open_ball_is_open (f x₀) ε ε_pos
+      have recU_open := H₁ U U_open
+      have x_in_recU: x₀ ∈ f⁻¹' U := by simpa
+      obtain ⟨δ, δ_pos, H₂⟩ : ∃ δ > 0, B(x₀, δ) ⊆ f⁻¹' U := recU_open x₀ x_in_recU
+      use δ, δ_pos
+      intro x hx
+      exact H₂ hx
+\end{minted}
+
+%TODO
+On procède une nouvelle fois par double implication :
+\begin{itemize}
+    \item On veut montrer que l'image réciproque d'un ouvert par une fonction continue est ouverte.
+        \begin{itemize}
+            \item On prend donc un ouvert, un point dans l'image réciproque de cet ouvert ainsi qu'une boule ouverte dans l'ouvert.
+            \item Par l'hypothèse de continuité, on obtient alors \lean{δ} tel que \lean{∀ (x : X), d x₀ x < δ → d (f x₀) (f x) < ε}. On utilise ce \lean{δ} comme rayon de la boule dans l'image réciproque
+            \item Il suffit alors de prouver que l'image de tout point de la boule dans l'image réciproque est dans la boule de l'ouvert de départ, ce qui est vrai par continuité de la fonction
+        \end{itemize}
+    \item Réciproquement, on veut montrer la continuité de la fonction lorsqu'elle conserve les ouverts par image réciproque.
+        \begin{itemize}
+            \item On se donne donc un point \lean{x₀} et un \lean{ε} (strictement positif). On prend alors comme ouvert la boule centrée en \lean{f x₀}, dont l'image réciproque est ouverte par hypothèse.
+            \item Il existe alors une boule de rayon \lean{δ} dans l'image réciproque, on peut donc prendre ce \lean{δ} et on a bien la continuité de la fonction.
+        \end{itemize}
+\end{itemize}
+
+On montre ensuite, à l'aide du critère topologique, que la composée de deux applications continues est continue :
+
+\begin{minted}{lean}
+theorem comp_continuous (f : X → Y) (g : Y → Z) : Continuous f → Continuous g → Continuous (g ∘ f) :=
+  by
+    intro f_cont g_cont
+    rw [topologic_continuity] at *
+    intro V V_open
+    let U := g⁻¹' V
+    have U_open : is_open U := g_cont V V_open
+    exact f_cont U U_open
+\end{minted}
+
+On se donne deux fonctions et les hypothèses de continuité, on réécrit le but et les hypothèses à l'aide de l'équivalence entre les définitions métrique et topologique, on se donne un ouvert et il suffit d'en prendre l'image réciproque par \lean{g} (qui est ouvert par continuité de \lean{g}) puis l'image réciproque par \lean{f} de l'image réciproque par \lean{g}, qui est ouverte par continuité de \lean{f}.
+
+On finit cette section en étudiant le cas des fonctions lipschitziennes :
+
+\begin{minted}{lean}
+def Lipschitz (f : X → Y) : Prop :=
+  ∃ k > 0, ∀ x x' : X, d_[Y] (f x) (f x') ≤ k * d_[X] x x'
+
+theorem lipschitz_implies_continuous (f : X → Y) : Lipschitz f → Continuous f :=
+  by
+    intro ⟨k, k_pos, h⟩
+    intro x₀ ε ε_pos
+    use ε / k, div_pos ε_pos k_pos
+    intro x hdx
+    have h₁ : d_[Y] (f x₀) (f x) < k * (ε / k) := lt_of_le_of_lt (h x₀ x) (mul_lt_mul_of_pos_left hdx k_pos)
+    rw [mul_div_cancel' ε] at h₁
+    . exact h₁
+    . linarith
+\end{minted}
+
+On se donne l'hypothèse de lipschitziannité de \lean{f}, ainsi qu'un point quelconque \lean{x₀} et un \lean{ε}. On veut montrer la continuité en \lean{x₀}. On choisit donc \lean{δ := ε / k}, qui est bien strictement positif car quotient de réels strictement positifs. On conclut en montrant que l'on a bien \lean{d_[Y] (f x₀) (f x) < ε}.
+
+\subsubsection{Fermés}
+
+On finit en définissant les fermés et l'adhérence. Commençons par les fermés :
+
+\begin{minted}{lean}
+def is_closed (F : Set X) := is_open Fᶜ
+
+lemma union_closed_is_closed : ∀ F G : Set X, is_closed F → is_closed G → is_closed (F ∪ G) :=
+  by
+    intro F G F_closed G_closed
+    rw [is_closed, Set.compl_union F G]
+    exact inter_open_is_open Fᶜ Gᶜ F_closed G_closed
+
+lemma inter_closed_is_closed (I : Set (Set X)) : (∀ F ∈ I, is_closed F) → is_closed (⋂₀ I) :=
+  by
+    intro h
+    rw [is_closed, Set.compl_sInter I]
+    have h₁ : ∀ U ∈ compl '' I, is_open U :=
+      by
+        intro U hU
+        simp [Set.image] at hU
+        obtain ⟨F, hF⟩ := hU
+        rw [←hF.right]
+        exact h F hF.left
+    exact union_open_is_open (compl '' I) h₁
+\end{minted}
+
+Un fermé est donc le complémentaire d'un ouvert. Les deux lemmes reposent sur leurs analogues pour les ouverts. Pour le premier, il suffit de passer au complémentaire puis d'appliquer le lemme sur l'intersection de deux ouverts. Dans le second cas, on passe au complémentaire dans l'intersection quelconque et on montre que tout les ensembles sont ouverts, puis on conclue avec le lemme sur l'union quelconque d'ouverts.
+
+Enfin, on définit l'adhérence et quelques lemmes :
+
+\begin{minted}{lean}
+def Closure (E : Set X) : Set X := ⋂₀ {F : Set X | is_closed F ∧ E ⊆ F}
+
+@[simp]
+lemma closure_is_closed {E : Set X} : is_closed (Closure E) := inter_closed_is_closed {F : Set X | is_closed F ∧ E ⊆ F} fun _ => And.left
+
+lemma sub_closure {E : Set X} : E ⊆ Closure E :=
+    Set.subset_sInter fun _ => And.right
+
+lemma closure_sub_closed {E F : Set X} : is_closed F → E ⊆ F → Closure E ⊆ F :=
+  fun hClosed hSub => Set.sInter_subset_of_mem ⟨hClosed, hSub⟩
+
+lemma closure_monotone {A B : Set X} (h : A ⊆ B) : Closure A ⊆ Closure B :=
+    closure_sub_closed closure_is_closed (Set.Subset.trans h sub_closure)
+
+lemma closure_closed_is_closed {E : Set X} (h : is_closed E) : Closure E = E :=
+  Set.Subset.antisymm (closure_sub_closed h (Set.Subset.refl E)) sub_closure
+
+lemma closure_closure_eq_closure {E : Set X} : Closure (Closure E) = Closure E := closure_closed_is_closed closure_is_closed
+\end{minted}
 
 \subsection{Complétude}
+
+La complétude nécessite un certain nombre de définitions , telles que les suites de Cauchy, la caractérisation séquentielle de la fermeture par exemple.
+
+\subsubsection{Définitions}
+
+La première chose a définir est une suite de Cauchy :
+
+\begin{minted}{lean}
+def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥ N, d (u m) (u n) < ε
+\end{minted}
+
+Ainsi qu'un espace complet :
+
+\begin{minted}{lean}
+def Complet (Y : Type v) [MetricSpace Y] := ∀ u : ℕ → Y, CauchySeq u → Converg u
+\end{minted}
+
+On rappelle que \lean{d} est la distance définie plus haut.
+
+
+\subsubsection{Quelques Lemmes}
+
+\textbf{Une suite convergente est de Cauchy}\\
+
+Le lemme suivant est assez simple dans le raisonnement. Il m'a aidé dans la prise en main et la compréhension de Lean.
+
+\begin{minted}{lean}
+theorem Converg_Cauchy (u : ℕ → X) : Converg u → CauchySeq u :=
+  by
+    intro ⟨l, hl⟩
+    intro ε ε_pos
+    have Hε : 0 < ε / 2 := by linarith
+    obtain ⟨N, hN⟩ := hl ε/2
+    use N
+    intro m hm
+    intro n hn
+    have hd : d (u n) (u m) ≤ d (u n) l + d l (u m) := dist_triangle
+    have h₁ : d (u n) l < ε/2 := @dist_symm X _ _ _ ▸ hN n hn
+    have h₂ : d (u m) l < ε/2 := @dist_symm X _ _ _ ▸ hN m hm
+    have hε := add_lt_add h₁ h₂
+    have h : d (u n) (u m) < ε/2 + ε/2 := lt_trans hd hε
+    have E : ε/2 + ε/2 = ε := by linarith
+    have H : d (u n) (u m) < ε
+\end{minted}
+
+
+Il s'agit de la preuve qu'une suite de Cauchy est convergente.
+L'instruction \lean{intro ⟨l, hl⟩} introduit l'hypothèse de convergence en utilisant l existence de la limite \lean{l} ainsi que en la notant hl. Nous disposons maintenant de l'énoncé général : $$\forall \varepsilon \geq 0 \exists N \in \mathbb{N},\forall n \geq N, d (u n) (l) < \varepsilon$$. Nous introduisons donc la quantité $\varepsilon$ que nous divisons par 2 dans l hypothèse He pour la suite de la preuve.
+Grâce a l hypothèse, nous avons un $N$ entier appliqué a cet $\varepsilon$/2 par \lean{obtain ⟨N, hN⟩ := hl ε/2 h} qui est utilisé avec \lean{use N}.
+
+On invoque un n et m > N pour continuer de parcourir l'hypothèse pour arriver au cœur de la preuve de ce lemme. Nous avons besoin de deux énoncés
+
+\begin{itemize}
+    \item \lean{hd} qui consiste a montrer que \lean{d (u n) (u m) ≤ d (u n) l + d l (u m)} par l'inégalité triangulaire
+    \item \lean{h1} et \lean{h2} utilisent l'hypothèse de convergence appliquées respectivement au \lean{n} et \lean{m} et $\varepsilon/2$
+\end{itemize}
+
+Les énoncés he et h condensent les inégalités précédentes avec successivement
+\begin{itemize}
+    \item $a \leq b \land c\leq d \implies a+b \leq c+d$ (\lean{add_lt_add})
+    \item $a \leq b \land b \leq c \implies a\leq c$ (\lean{lt_trans}) appliquée à \lean{hd} et \lean{he}
+\end{itemize}
+
+Il ne nous reste plus qu'à préciser a Lean que \lean{ε/2 + ε/2 = ε} grâce a la tactique \lean{linarith} pour finir la preuve.
+
+\vspace{\baselineskip}
+\textbf{Une suite de Cauchy est bornée}\\
+
+Le second lemme est le caractère bornée des suites de Cauchy :
+
+\begin{minted}{lean}
+lemma Cauchy_borne (u : ℕ → X) : (h : CauchySeq u) → Bornee u := by
+    unfold CauchySeq
+    unfold Bornee
+    intro h
+    specialize h (1: ℝ)
+    have h1 : (1:ℝ) >0 := by
+      simp
+    specialize h h1
+    obtain ⟨N, hN⟩ := h
+    have fintype.D := { d (u N) (u n) | n : Fin (N-1)}
+    -- have M := D.max
+    intro n
+\end{minted}
+
+
+La tactique \lean{unfold} déploie les définitions de \lean{CauchySeq} et \lean{Bornee} dans les hypothèses et le but. Nous introduisons l'hypothèse \lean{h} qui est le fait que la suite \lean{u} est de Cauchy. Le début de \lean{h} étant une généralité, nous spécialisons le \lean{ε} en 1 pour faciliter la preuve. (En effet, sans spécifier le epsilon choisit, il faudrait utiliser l'axiome du choix). L'énonce \lean{h1} montre que 1 pris dans les réels est bien strictement positif, critère que doit valider tout choix d'epsilon. Comme précédemment, la tactique \lean{obtain ⟨N, hN⟩} donne le \lean{N} associé a 1 (vu comme un epsilon quelconque) et note \lean{hN} la suite de l'énoncé : \lean{hN : ∀ m ≥ N, ∀ n ≥ N, d (u m) (u n) < 1}. La suite de la preuve consiste en la recherche d un majorant M réel à l'ensemble des distances possibles entre les termes de la suite et un point \lean{x} de \lean{X}. Ici, nous choisissons le \lean{N}ième terme de la suite \lean{u} comme point de référence.
+
+De deux choses l'une :
+\begin{itemize}
+    \item si $M \geq 1$, M majore alors tous les termes de la suite d (u N) (u n)
+    \item si $M \leq  1$ , M <- 1 et 1 est un majorant de la suite d (u N) (u n)
+\end{itemize}
+
+On définit $D := \{d\ (u\ N)\ (u\ n)\ \mid\ n \leq N-1\}$, l ensemble des distances entre \lean{u N} et tous les autres termes \lean{u} d'indices inférieurs a \lean{N}. On note \lean{M} le max de cet ensemble.
+
+Une autre méthode, plus algorithmique, serait de faire une induction sur n < N : poser $M := d\ (u\ N)\ (u\ 0)$ puis comparer $M$ aux autres distances. Dès que $M$ est dépassé par une distance, ce nouveau majorant remplace l'ancienne valeur de $M$.
+
+Supposons le M obtenu, il reste a majoré les termes d indices supérieures a N. Ils le sont dés le départ par l hypothèse que la suite est de Cauchy.
+Le majorant de la suite sera donc le maximum entre M et 1, comme annoncé.
+
+
+\textbf{Une suite de Cauchy ayant une valeur d adhérence converge}\\
+
+Enfin, voici un dernier lemme sur la convergence des suites de Cauchy, principalement utilisée dans le chapitre sur la compacité.
+
+\begin{minted}{lean}
+lemma Cauchy_val_adherence_conv (u : ℕ → X) (l : X) (f : ℕ → ℕ)
+    (h1 : strictement_croissante f) (h2 : lim (u∘f) l) (h3 : CauchySeq u): lim u l := by
+  intro ε hε
+  specialize h3 (ε/2) (half_pos hε)
+  specialize h2 (ε/2) (half_pos hε)
+  obtain ⟨ N1, hN1 ⟩ := h2
+  obtain ⟨ N2, hN2 ⟩ := h3
+  use Nat.max N1 N2
+  intro n hn
+  have h : d l (u n) ≤ d l (u (f n)) + d (u (f n)) (u n) := dist_triangle
+  have ineq1: Nat.max N1 N2 ≥ N1 := Nat.le_max_left N1 N2
+  have ineq2: Nat.max N1 N2 ≥ N2 := Nat.le_max_right N1 N2
+
+  specialize hN1 n (le_trans ineq1 hn)
+  specialize hN2 n (le_trans ineq2 hn)
+  specialize hN2 (f n) (le_trans (le_trans ineq2 hn) (stricte_croissance_geq f h1 n))
+  rw [Function.comp_apply] at hN1
+  rw [dist_symm] at hN2
+
+  linarith
+\end{minted}
+
+La fonction \lean{f} supposée strictement croissante (hypothèse \lean{h1}) est la suite extractrice. L'hypothèse \lean{h2} correspond a l'hypothèse d'existence d'une valeur d'adhérence. Comme toute preuve débutant par une généralité, invoquons un epsilon strictement positif. On injecte ensuite la moitié de cette quantité dans les hypothèse \lean{h2} (la convergence de la suite extraite) et \lean{h3} (la suite \lean{u} est de Cauchy).
+On obtient ainsi \lean{N1} et \lean{N2} respectivement des hypothèses \lean{h2} et \lean{h3} pour ce \lean{ε/2}. Lean a ensuite a sa disposition le maximum de \lean{N1} et \lean{N2} grâce à \lean{use Nat.max N1 N2}.
+
+Après toutes ces invocations et spécialisations, le but de la preuve est le suivant $$\forall n \geq max (N1,N2), d\ l\ (u\ n) \leq \varepsilon$$
+
+On introduit donc un \lean{n} plus grand que $max(N1,N2)$. Pour ce \lean{n}, on énonce \lean{h}, prouvé par l'inégalité triangulaire.
+De plus, on introduit deux inégalités : $max(N1,N2) \geq N1$ $max(N1,N2) \geq N2$ (respectivement \lean{ineq1} et \lean{ineq2}).
+
+Voici les hypothèses à retenir :
+\begin{itemize}
+    \item \lean{hN1 : ∀ n ≥ N1, d l ((u ∘ f) n) < ε / 2}
+    \item \lean{hN2 : ∀ m ≥ N2, ∀ n ≥ N2, d (u m) (u n) < ε / 2}
+\end{itemize}
+
+Et le but de preuve est : \lean{d l (u n) < ε}.
+
+Tout d'abord, nous prouvons que le \lean{n} invoqué au début de la preuve est effectivement supérieur à \lean{N1} et \lean{N2} pour pouvoir utiliser les hypothèses, grâce au théorème \lean{le_trans} respectivement appliqué aux couples d'hypothèses \lean{ineq1 hn} et \lean{ineq2 hn}. On rappelle que \lean{hN2} dépend de deux généralités en \lean{m > N2} et \lean{n > N2}. On souhaite spécialiser \lean{m} en \lean{f(n)} par \lean{specialize hN2 (f n)}; la suite de la ligne montre que \lean{m > N}.
+On réécrit la composition de l'hypothèse \lean{hN1} pour faire correspondre les expressions : \lean{(u ∘ f) n)} et \lean{u(f n)}. Enfin, la tactique \lean{linarith} vient synthétiser les hypothèses \lean{hN1} et \lean{hN2} pour conclure au but.
+
+
+\subsubsection{Théoreme du point fixe de Banach Picard}
+
+Il reste a montrer le théorème central de ce chapitre : le théorème du point fixe contractant de Banach picard.
+
+\begin{minted}{lean}
+theorem Point_Fixe_Contractant (f : X -> X) : (Complet X ∧ contractant f ∧ ∀ u :ℕ -> X, ∀ n , f (u n) = u (Nat.succ n)) -> (∃!x:X,f x =x ∧ lim u x) :=
+  by
+    unfold contractant
+    have C := d (u 0) (u 1)
+    intro H
+    obtain ⟨k, hk⟩ := H.2
+
+    have h : ∀ n : ℕ , d (u (Nat.succ n)) (u n) < k^n*C := sorry
+    -- cf exercice 50 du poly de topo
+
+    have l : ∀ ε>0 ,∃ N , ∀ n > N ,d (u (Nat.succ n)) (u n) < ε := sorry
+    -- preuve que k^n*C tend vers zero puis thm des gendarmes
+
+    have hp : ∀ n p : ℕ , d (u n) (u (n + p)) < ((k^n)/(1-k))*C := sorry
+    -- IT generalisée et recurrence sur p
+
+    have lp : ∀ ε>0 ,∃ N ,∀ p ≥ N,∀ n ≥ N, d (u p) (u n) < ε := sorry
+    -- encore une preuve de convergence vers 0
+
+    have Cauchy : CauchySeq u := by exact lp
+    have Conv : Converge u := by exact H.1 u Cauchy
+\end{minted}
 
 
 \subsection{Compacité}
@@ -229,73 +813,64 @@ La preuve consiste en l'introduction de \lean{x}, \lean{r}, \lean{y} et de l'hyp
 \subsubsection{Définition}
 
 \begin{minted}{lean}
-
 variable {X Y : Type u} [MetricSpace X] [MetricSpace Y]
-
 \end{minted}
 
-On introduit deux espaces métriques $(X,d_{X})$ et  $(Y,d_{Y})$ grâce à la tactique \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera  $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$ .\\
+On introduit deux espaces métriques $(X,d_{X})$ et $(Y,d_{Y})$ grâce à la commande \lean{variable}. X et Y sont munis des distances respectives \lean{d_{X}} et \lean{d_{Y}} défini par \lean{MetricSpace X} et \lean{MetricSpace Y}, ainsi le type X désignera $(X,d_{X})$ et le type Y désignera $(Y,d_{Y})$.\\
 
-D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant, voici quelque lemmes et définitions préliminaires. 
+D'après le cours un espace métrique \lean{X} est compact si et seulement si de toute suite d'éléments de \lean{X} on peut extraire une sous-suite convergente. Nous définirons un compact par cette propriété. Mais avant, voici quelque lemmes et définitions préliminaires.
 
-\begin{minted}[breaklines]{lean}
-def strictement_croissante (f : ℕ → ℕ ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
-
+\begin{minted}{lean}
+def strictement_croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n > m -> f n > f m
 def croissante (f : ℕ → ℕ) : Prop := ∀ n m : ℕ, n >= m → f n >= f m
-
 \end{minted}
 
 \lean{croissante} et \lean{stricte_croissante} sont les définitions respectives de la croissance et stricte croissance d'une fonction de $\mathbb{N}$ dans $\mathbb{N}$. Ensuite le lemme \lean{stricte_croissante_to_croissante} prouve qu'une fonction strictement croissante est croissante:
 
-\begin{minted}[breaklines]{lean}
+\begin{minted}{lean}
 lemma stricte_croissante_to_croissante (f : ℕ → ℕ) : strictement_croissante f → croissante f :=
   by
     intro hf n m hnm
     apply Or.elim (Nat.eq_or_lt_of_le hnm)
     . exact Nat.le_of_eq ∘ congrArg f
     . exact Nat.le_of_lt ∘ hf n m
-    
 \end{minted}
 
 
-\begin{itemize} [  align=left,  itemsep=20pt ]
+\begin{itemize}[align=left,itemsep=20pt]
     \item[\textbf{intro:}] Cette preuve commence par l'introduction de \lean{hf} l'hypothèse de la strict croissance de \lean{f} , \lean{n} et \lean{m} deux entiers naturels et
-    \lean{hnm} l'hypothèse $ \lean{n} \geq \lean{m} $. Le but est de type $ \lean{f n} \geq \lean{f m} $. 
+    \lean{hnm} l'hypothèse \lean{n ≥ m}. Le but est de type \lean{f n ≥ f m}.
 
-    \item[\textbf{apply:}] Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que $ \lean{n} \geq \lean{m} $ implique "soit $ \lean{n} = \lean{m} $ soit $
-    \lean{n} \geq \lean{m} $ ". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas.
+    \item[\textbf{apply:}] Le lemme de mathlib \lean{Nat.eq_or_lt_of_le} appliqué à \lean{hnm} montre que \lean{n ≥ m} implique "\lean{n} = \lean{m} ou \lean{n ≥ m}". Ainsi par composition avec la tactique \lean{apply Or.elim}, on obtient une disjonction de cas.
 
-    \item[\textbf{exact:}] Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n >=  f m}  se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie
-    que l'égalité des antécédents implique l'égalité des images.  Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{
+    \item[\textbf{exact:}] Nous obtenons alors deux buts. Le premier, \lean{m = n -> f n ≥ f m} se montre par la fonction \lean{congrArg}, elle prend en argument \lean{f} et renvoie
+    que l'égalité des antécédents implique l'égalité des images. Puis le lemme de mathlib \lean{Nat.le_of_eq} élargi l'égalité des images à l'inégalité souhaitée. Le second but \lean{
     n > m -> f n >= f m} se montre par \lean{hf} avant d'élargir l'inégalité strict par \lean{Nat.le_of_lt}. Ainsi dans les deux cas, la tactique \lean{exact} prouve que la propriété
     obtenu est exactement celle attendue.
 
-    
-    
+
+
 \end{itemize}
 
 
-\vspace{\baselineskip} 
+\vspace{\baselineskip}
 
 Enfin voici le lemme \lean{stricte_croissance_geq} qui nous servira également pour la suite:
 
-\begin{minted}[breaklines]{lean}
-
-lemma stricte_croissance_geq (f : \Nat → \Nat) : strictement_croissante f → ∀ n : ℕ, f n >= n :=
+\begin{minted}{lean}
+lemma stricte_croissance_geq (f : ℕ → ℕ) : strictement_croissante f → ∀ n : ℕ, f n >= n :=
   by
     intro h n
     induction' n with n hi
     . exact Nat.zero_le (f 0)
-    . exact Nat.succ_le_of_lt ∘ Nat.lt_of_le_of_lt hi \textdollar h (n + 1) n (Nat.lt_succ_self n)
-\end{minted}   
-    
+    . exact Nat.succ_le_of_lt ∘ Nat.lt_of_le_of_lt hi $ h (n + 1) n (Nat.lt_succ_self n)
+\end{minted}
 
-Nous pouvons à présent prouver que si une suite converge alors toute suite extraite converge vers la même limite:    
 
-\begin{minted}[breaklines]{lean}    
-    
+Nous pouvons à présent prouver que si une suite converge alors toute suite extraite converge vers la même limite:
 
-lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim  x l ∧ strictement_croissante f -> lim  (x ∘ f) l :=
+\begin{minted}{lean}
+lemma limite_suite_extraite (K : Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ) : lim x l ∧ strictement_croissante f -> lim (x ∘ f) l :=
   by
     rintro ⟨hx, hf⟩ ε hε
     obtain ⟨N, hN ⟩ := hx ε hε
@@ -305,21 +880,21 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
     apply hN
     have sup_N: f N >= N := stricte_croissance_geq f hf N
     linarith [t, stricte_croissance_geq f]
-    
-\end{minted}
-\begin{itemize} [  align=left,  itemsep=20pt ]
 
-    \item [\textbf{rintro:}] Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} ( de type lim x l) et \lean{hf} ( de type \lean{strictement_croissante
+\end{minted}
+
+\begin{itemize}[align=left,itemsep=20pt]
+    \item [\textbf{rintro:}] Dans ce contexte la tactique \lean{rintro} permet d'introduire séparément \lean{hx} (de type lim x l) et \lean{hf} (de type \lean{strictement_croissante
     f}), le but étant une implication, les hypothèses de départ sont introduites en premier. \lean{rintro} introduit ensuite \lean{ε} et \lean{hε} (de type \lean{ε>0} d'après
     l'expression du but qui commence par le quantificateur $\forall$ (voir définition de \lean{lim}).
 
     \item [\textbf{obtain:}] Ainsi on obtient \lean{N} un entier naturel et \lean{hN} de type \lean{∀ n ≥ N, d l ↑(x n) < ε} par \lean{hx} appliqué à \lean{ε} et \lean{hε}.
 
-    \item [\textbf{use:}] Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient. 
+    \item [\textbf{use:}] Le but étant alors \lean{∃ N, ∀ n ≥ N, d l ↑((x ∘ f) n) < ε}, la tactique \lean{ use N} fait que le but soit de montrer que \lean{N} convient.
 
-    \item [\textbf{intro:}] On introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$. 
+    \item [\textbf{intro:}] On introduit alors \lean{n} et \lean{hn} puisque le but commence encore une fois par le quantificateur $\forall$.
 
-    \item [\textbf{apply:}] Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}. 
+    \item [\textbf{apply:}] Il reste à montrer \lean{d l ↑((x ∘ f) n) < ε}. Nous appliquons \lean{ hN} au but, ainsi il reste à montrer que \lean{f n ≥ N}.
 
     \item [\textbf{have:}] \lean{stricte_croissante_to_croissante} démontrée précédemment appliquée à \lean{f} et \lean{hf} nous donne la croissance de \lean{f}. Puis la définition de
     la croissance de \lean{f} appliquée à \lean{n},\lean{N} et \lean{hn} nous donne la propriété que nous avons nommé \lean{t} par la tactique have.
@@ -330,38 +905,36 @@ lemma limite_suite_extraite ( K:Set X) (x : ℕ → K) (l : X) (f : ℕ → ℕ)
 
 \end{itemize}
 
-\vspace{\baselineskip} 
-\vspace{\baselineskip} 
- 
-\begin{minted}[breaklines]{lean}
-def lim' (x : ℕ → α) (l : α ) [MetricSpace α  ]:= ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
+\vspace{\baselineskip}
+\vspace{\baselineskip}
+
+\begin{minted}{lean}
+def lim' (x : ℕ → α) (l : α) [MetricSpace α]:= ∀ ε > 0, ∃ N : ℕ, ∀ n ≥ N, d l (x n) < ε
 \end{minted}
 
-Cette définition de la limite prend en argument une suite \lean{x} de $\mathbb{N}$ dans $\alpha$, un type quelquonc de l'univers \lean{u} à partir duquel on construit un espace metrique grace à la syntaxe \lean{[MetricSpace α  ]}. \lean{lim'} prend en second argument un élément de $\alpha$, puis elle defini la convergence de la suite \lean{x} vers cet élément.\\
+Cette définition de la limite prend en argument une suite \lean{x} de $\mathbb{N}$ dans $\alpha$, un type quelquonc de l'univers \lean{u} à partir duquel on construit un espace metrique grace à la syntaxe \lean{[MetricSpace α]}. \lean{lim'} prend en second argument un élément de $\alpha$, puis elle defini la convergence de la suite \lean{x} vers cet élément.\\
 
 Nous pouvons à présent définir un espace métrique compact:
 
-\begin{minted}[breaklines]{lean}
-
-def Compact (K : Type u) [MetricSpace K]  : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ,  ∃ l,  (strictement_croissante f ∧  lim' ( x ∘ f) l)
+\begin{minted}{lean}
+def Compact (K : Type u) [MetricSpace K] : Prop := ∀ x : ℕ → K , ∃ f : ℕ → ℕ, ∃ l, (strictement_croissante f ∧ lim' (x ∘ f) l)
 \end{minted}
 
-Cette définition prend encore une fois un type quelquonc  de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N} $ dans $mathbb{N} $  que l'on compose par \lean{x}. Ainsi, la compacité se défini  par l'existence d'une telle fonction ainsi que celle d'un élément  \lean{l} vers lequel la fonction composée converge.
+Cette définition prend encore une fois un type quelconque de u en argument et elle en fait un espace métrique. Pour toute suite \lean{x}, l'existence d'une suite extraite est par définition équivalente à l'existence d'une fonction strictement croissante de $mathbb{N}$ dans $mathbb{N}$ que l'on compose par \lean{x}. Ainsi, la compacité se défini par l'existence d'une telle fonction ainsi que celle d'un élément \lean{l} vers lequel la fonction composée converge.
 
 \begin{minted}{lean}
 def is_compact (K : Set X) : Prop := ∀ x : ℕ → K, ∃ f : ℕ → ℕ, ∃ l ∈ K, strictement_croissante f ∧ lim (x ∘ f) l
-
 \end{minted}
 
-Une partie d'un espace métrique est compact si le sous-espace métrique correspondant est compact. Etant donné que la distance se conserve pour tout sous-espace métrique, il n'est pas nécessaire de définir explicitement un nouvel espace métrique. Une partie \lean{K} de \lean{X} est un type de \lean{Set X} et tout élément de  \lean{K} est effectivement un type de \lean{X}. Ainsi  \lean{K} conserve les propriétées de \lean{X}. Il suffit donc d'ajuster la définition précédente en remplaçant \lean{∀ x : ℕ → X} par \lean{∀ x : ℕ → K}, ainsi que \lean{lim'} par \lean{lim}. En effet, \lean{lim} prend en argument une suite à valeur dans un type de \lean{Set X} et \lean{lim'} ne conviend qu'à une suite à valeurs dans \lean{X}.
+Une partie d'un espace métrique est compact si le sous-espace métrique correspondant est compact. Etant donné que la distance se conserve pour tout sous-espace métrique, il n'est pas nécessaire de définir explicitement un nouvel espace métrique. Une partie \lean{K} de \lean{X} est un type de \lean{Set X} et tout élément de \lean{K} est effectivement un type de \lean{X}. Ainsi \lean{K} conserve les propriétées de \lean{X}. Il suffit donc d'ajuster la définition précédente en remplaçant \lean{∀ x : ℕ → X} par \lean{∀ x : ℕ → K}, ainsi que \lean{lim'} par \lean{lim}. En effet, \lean{lim} prend en argument une suite à valeur dans un type de \lean{Set X} et \lean{lim'} ne conviend qu'à une suite à valeurs dans \lean{X}.
 
- \vspace{\baselineskip} 
- 
+ \vspace{\baselineskip}
+
 \subsubsection{Compacité et fermeture}
 Nous démontrerons dans cette partie quelques résultats sur la fermeture. Tout d'abord, montrons qu'une partie compact de \lean{X} est fermé dans \lean{X}
 
-\begin{minted}[breaklines]{lean}   
-lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K := 
+\begin{minted}{lean}
+lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
   by
     intro K h
     contrapose! h
@@ -389,17 +962,13 @@ lemma compact_is_closed : ∀ K : Set X, is_compact K → is_closed K :=
     exact hl'
 \end{minted}
 
-Afin d'expliquer cette preuve de manière claire et détaillée,  nous la diviserons en plusieurs parties.\\
+Afin d'expliquer cette preuve de manière claire et détaillée, nous la diviserons en plusieurs parties.\\
 
 \begin{itemize}[itemsep=30pt]
-
-
     \item \textbf{Raisonnement par contraposé}\\
     Comme le but est une implication de la forme $ \forall x, P(x) \implies Q(x)$, la tactique \lean{intro} introduit d'abord $x$ puis $P(x)$. Ici on nomme \lean{K} une partie compact,
     et h l'hypothèse de sa compacité. Le but devient alors \lean{is_closed K}.\\
     La tactique \lean{contrapose!} permet un raisonnement par contraposé. le but devient la négation de \lean{h} et h devient la négation du but précédent.
-
-
     \item \textbf{Construction d'une suite de \lean{K} convergeant dans \lean{X} exlu de \lean{K} }\\
     Nous nommons \lean{diff} la propriété que l'adhérence de \lean{K} est diférente de \lean{K}. La tactique \lean{have} nous permet à la fois d'emboiter une "sous" preuve et de nommer
     la propriété prouvée. Par souci de clarté nous détaillerons la preuve de \lean{diff} dans un second temps. Nous ferons de même pour \lean{c : K ⊂ Closure K } puis
@@ -408,20 +977,17 @@ Afin d'expliquer cette preuve de manière claire et détaillée,  nous la divise
     Ensuite par la tactique \lean{obtain}, nous appliquons le lemme \lean{sequential_closure} pour \lean{K} et \lean{l} dans le sens direct (\lean{.mp}).\\
     Ainsi le critère de fermeture séquentielle nous donne l'existence d'une suite de \lean{K} convergente vers \lean{l}. \lean{obtain} nous permet d'introduire une telle suite ainsi que
     la propriété qu'elle vérifie puis de les nommer respectivement \lean{x} et \lean{hx}.
-
-
-    \item  \textbf{ Preuve que \lean{x} n'admet pas de valeur d'adhérence}\\
-    Enfin, Le goal étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{x}, 
+    \item \textbf{ Preuve que \lean{x} n'admet pas de valeur d'adhérence}\\
+    Enfin, Le but étant la négation d'une proposition, \lean{intro} introduit cette proposition et change le but en \lean{False}. Ainsi par l'absurde nous montrerons que \lean{x},
     n'admet pas de valeur d'adhérence dans \lean{K}, donc que \lean{K} n'est pas compact. \\
     \lean{K} est supposé compact donc \lean{choose } applique la définition de la compacité à x, et prend alors une suite extraite de \lean{x} qui converge dans \lean{K }vers \lean{l'},
     on nomme \lean{hl'} l'hypothèse que \lean{l'} est dans \lean{K}.\\
     Nous prouvons ensuite que cette suite extraite tend vers \lean{l} par le lemme \lean{limite_suite_extraite} démontrée plus haut. Puis nous prouvons que \lean{l=l'} par unicité de la
-    limite.\\ 
+    limite.\\
     La tactique \lean{rw} prend en argument une égalité et en précisant \lean{at l_not_in_K } elle remplace dans \lean{l_not_in_K} le membre de gauche par le membre de droite. Ainsi
-    \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}.\\ 
+    \lean{l_not_in_K} devient \lean{l'} n'apartient pas à \lean{K}. Ceci est en conctradiction avec \lean{hl'}.\\
     Par conséquent \lean{apply l_not_in_K at hl'} change \lean{hl'} en \lean{False}.\\
     Enfin quand une hypothèse est égale au but, il suffit d'appliquer la tactique \lean{exact}, ce qui termine la preuve.
-
 \end{itemize}
 
 \vspace{\baselineskip}
@@ -435,8 +1001,8 @@ Enfin l'hypothèse \lean{l_in_closure_not_in_K} est déduite de l'inclusion stri
 Les preuves suivantes seront moins détaillées afin d'éviter de trop se répéter, tous les théorèmes commençant par \lean{Set.} proviennent de Mathlib. Poursuivons avec la proposition que toute partie fermée d'une partie compacte est compacte.\\
 
 
-\begin{minted}[breaklines]{lean}   
-lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_sub: H  ⊆ K) (h_closed : is_closed H)  : is_compact H := by
+\begin{minted}{lean}
+lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_sub: H ⊆ K) (h_closed : is_closed H) : is_compact H := by
   intro x
   have x_in_k : ∀ (n : ℕ), (x n : X) ∈ K := by
     intro n
@@ -446,7 +1012,7 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
   let y : ℕ → K := λ n ↦ ⟨x n, x_in_k n⟩
   obtain ⟨ f, l, _, croiss_f,lim_in_K⟩ := k_compact y
 
-  have l_in_h : l ∈ Closure H := by apply (sequential_closure H l).mpr  ⟨ x∘f,lim_in_K⟩
+  have l_in_h : l ∈ Closure H := by apply (sequential_closure H l).mpr ⟨ x∘f,lim_in_K⟩
   rw [closure_closed_is_closed] at l_in_h
   use f,l, l_in_h, croiss_f
   have eg : ∀ n , x n = (y n :X):= by
@@ -463,8 +1029,8 @@ lemma subcompact_closed_is_compact (K H: Set X) (k_compact : is_compact K) (h_su
     rw [Function.comp_apply] at hN
     rw [<- eg] at hN
     exact hN
-    
-  exact  lim_xf
+
+  exact lim_xf
   exact h_closed
 \end{minted}
 
@@ -480,31 +1046,29 @@ Rappelons que \lean{closure_closed_is_closed} nous donne l'égalité de tous fer
 
 Finalement \lean{f} et \lean{l} sont de bons candidats pour obtenir une sous-suite de \lean{x} convergente dans \lean{H}.\\
 
-Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$ et en appliquant \lean{eg}. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x)) $ 
+Il reste à montrer que cette sous-suite converge bien vers \lean{l}. On utilise alors la définition de \lean{y} pour obtenir l'égalité \lean{eg}. Puis nous obtenons la convergence par une preuve en $\epsilon$ et en appliquant \lean{eg}. \lean{Function.comp_apply} justifie que pour toute fonction $u$, $v$ et pour tout $x$, $(u \circ v) (x) = u(v(x)) $
 
 
-
-
-\begin{minted}[breaklines]{lean}
-lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed K) : is_compact K := by
+\begin{minted}{lean}
+lemma closed_incompact_iscompact (hX : Compact X) (K : Set X) (hK : is_closed K) : is_compact K := by
   intro x
   let x' : ℕ → X := λ n ↦ x n
   obtain ⟨ f, l, hf,limite⟩ := hX x'
-  use f 
+  use f
   have eg : ∀ n , x n = x' n:= by
     intro n
     rfl
   have limite2 : lim (x ∘ f) l := by
-    intro ε hε 
-    obtain ⟨ N , hN⟩ := limite ε hε 
-    use N 
+    intro ε hε
+    obtain ⟨ N , hN⟩ := limite ε hε
+    use N
     intro n hn
     specialize hN n hn
     rw [Function.comp_apply]
     rw [Function.comp_apply] at hN
     rw [eg]
     exact hN
-  have hl :l ∈ Closure K  := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩ 
+  have hl : l ∈ Closure K := (sequential_closure K l).mpr ⟨ x∘f ,limite2⟩
   rw [closure_closed_is_closed hK] at hl
   use l
 \end{minted}
@@ -514,45 +1078,45 @@ lemma closed_incompact_iscompact (hX : Compact X) ( K :  Set X) (hK : is_closed 
 \subsubsection{Compacité et continuité}
 L'image d'un compact par une fonction continue est compact. En voici la preuve formalisée en lean.
 
-\begin{minted}[breaklines] {lean}
-lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_compact : Compact  X) : is_compact (Set.image f Set.univ) := by
+\begin{minted} {lean}
+lemma image_continuous_compact (f : X → Y) (f_continuous: Continuous f) (h_compact : Compact X) : is_compact (Set.image f Set.univ) := by
 
   intro y
-  have hn : ∀ n, ∃ xn ∈ Set.univ, f (xn ) = y n := by
+  have hn : ∀ n, ∃ xn ∈ Set.univ, f xn = y n := by
     intro n
-    exact ( (Set.mem_image f Set.univ ( y n)).mp (y n).2 )
+    exact ((Set.mem_image f Set.univ (y n)).mp (y n).2)
 
   choose x hx using hn
   obtain ⟨ j, l, croiss_j,lim_in_univ⟩ := h_compact x
-  use j, (f l) 
+  use j, (f l)
 
-  have hf :  f l ∈ f '' Set.univ := by   
-    apply (Set.mem_image f Set.univ ( f l)).mpr
+  have hf : f l ∈ f '' Set.univ := by
+    apply (Set.mem_image f Set.univ (f l)).mpr
     use l
     apply And.intro
     exact Set.mem_univ l
     rfl
-    
+
   apply And.intro
-  exact hf 
+  exact hf
   apply And.intro
   exact croiss_j
 
-  have limite : lim' (f ∘ x ∘ j) (f l) := by 
-  
-    apply ( sequential_continous f l).mp (f_continuous  l ) (x∘j)
-    intro ε hε 
+  have limite : lim' (f ∘ x ∘ j) (f l) := by
+
+    apply (sequential_continous f l).mp (f_continuous l) (x∘j)
+    intro ε hε
     obtain ⟨ N, hN ⟩ := lim_in_univ ε hε
-    use N 
+    use N
 
   intro ε hε
-  obtain ⟨ N, hN ⟩ :=  limite ε hε
+  obtain ⟨ N, hN ⟩ := limite ε hε
   use N
   intro n hn
   rw [Function.comp_apply]
-  rw [←  (hx (j n)).2]
+  rw [←(hx (j n)).2]
   specialize hN n hn
-  rw [ Function.comp_apply] at hN 
+  rw [ Function.comp_apply] at hN
   exact hN
 
 \end{minted}
@@ -567,7 +1131,7 @@ La tactique \lean{use} propose \lean{j} pour extraire une sous suite de \lean{y}
 
 On montre que \lean{f l} est dans \lean{(Set.image f Set.univ}. Cette propriétée est vrai pour tout élément de \lean{X}. \\
 
-avant d'appliquer cette propriétée, \lean{apply And.intro} permet de séparer les arguments du but 
+avant d'appliquer cette propriétée, \lean{apply And.intro} permet de séparer les arguments du but
 
 \lean{ ⊢ f l ∈ f '' Set.univ ∧ strictement_croissante j ∧ lim (y ∘ j) (f l)}. On fait de même pour appliquer la stricte croissance de \lean{j}. \\
 
@@ -575,28 +1139,71 @@ Enfin, la convergence de la sous-suite de \lean{y} est obtenu par continuité de
 
 Ainsi, on montre que \lean{lim} coincide trivialement avec \lean{lim'} par une "preuve en epsilon".
 
-\vspace{\baselineskip} 
+\vspace{\baselineskip}
 
-\subsection{Compacité et complétude}
+\subsubsection{Compacité et complétude}
 
 Tout espace métrique compact est complet. Ceci est la dernière proposition de base que nous avons formalisé en Lean avant de définir la compacité de manière topologique.
 
-\begin{minted} {lean}
+\begin{minted}{lean}
 lemma compact_is_complet (K : Type v) [MetricSpace K] : Compact K -> Complet K := by
-  intro h x hx 
-  obtain ⟨ f, l, hf,lim_l⟩ := h x  
+  intro h x hx
+  obtain ⟨ f, l, hf,lim_l⟩ := h x
   use l
-  apply Cauchy_val_adherence_conv x l f hf lim_l hx 
+  apply Cauchy_val_adherence_conv x l f hf lim_l hx
 \end{minted}
 
 La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme \lean{K} est compact (\lean{h}), \lean{x} admet une sous-suite qui converge. On introduit cette sous-suite ainsi que sa limite nommée \lean{l} par la tactique \lean{obtain}. On propose \lean{l} comme candidat de la limite de \lean{x}. Enfin, ceci est vérifié par le lemme \lean{Cauchy_val_adherence_conv} démontré dans la section Complétude.
 
-\vspace{\baselineskip} 
+\newpage
 
-\subsection{Compacité et recouvrements}
+\appendix
 
+\section{Méta programmation}
 
-\subsection{Connexité}
+Une \textbf{monade} est une abstraction en programmation fonctionnelle. C'est une structure ayant pour fonction d'encapsuler des données dans une boîte elle même porteuse d'informations. Quelques exemples usuels :
+
+\begin{itemize}
+    \item \haskell{Maybe} doté de deux constructeurs \haskell{Just} et \haskell{Nothing} tel que \haskell{Just} prenne un argument, permet de représenter des procédures ne renvoyant pas forcément une valeur.
+    \item \haskell{State s} qui représente une procédure avec un état de type \haskell{s}, que l'on peut modifier au cours de la procédure.
+    \item \haskell{Reader} qui représente une procédure ayant accès à un environnement (ou contexte) en lecture seule.
+\end{itemize}
+
+En Lean, une tactique peut donc être vu comme une instruction qui manipule \textit{l'état} de la preuve et ayant accès à un \textit{contexte}. Une tactique est représentée comme une monade \lean{TacticM}, c'est à dire \lean{ReaderT Context $ StateRefT State TermElabM} (on dit que \lean{TacticM} étend \lean{TermElabM} avec un état et un contexte).
+
+On détaille ici le code de la tactique \lean{custom_assump} (voir section \ref{code:custom_assump} pour l'idée générale) :
+
+\begin{minted}{lean}
+elab "custom_assump" : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let goal ←Lean.Elab.Tactic.getMainGoal
+    let goalType ←Lean.Elab.Tactic.getMainTarget
+    let ctx ←Lean.MonadLCtx.getLCtx
+    let option_matching_expr ←ctx.findDeclM? fun decl: Lean.LocalDecl => do
+      let declExpr := decl.toExpr
+      let declType ←Lean.Meta.inferType declExpr
+      if ←Lean.Meta.isExprDefEq declType goalType
+        then return Option.some declExpr
+        else return Option.none
+    match option_matching_expr with
+    | some e => Lean.Elab.Tactic.closeMainGoal e
+    | none =>
+      Lean.Meta.throwTacticEx `custom_assump goal
+        (m!"unable to find matching hypothesis of type ({goalType})")
+\end{minted}
+
+\begin{itemize}
+    \item On commence par définir la tactique \lean{custom_assump} avec l'annotation \lean{tactic}, qui classifie la syntaxe "\lean{custom_assump}" dans la catégorie syntaxique \lean{tactic}. Le corps de la tactique est ce qui suit \lean{=>} : un terme de type \lean{TacticM Unit}.
+    \item La première instruction, \lean{Lean.Elab.Tactic.withMainContext} place la procédure qui suit dans le contexte de la preuve en cours.
+    \item On peut alors obtenir du contexte le but et le type du but, c'est à dire la proposition à prouver (lignes 3 et 4)
+    \item On peut aussi obtenir la liste des hypothèses (ligne 5), stockées dans une structure appelée \lean{LocalContext}. On extrait a liste des déclarations (de type \lean{LocalDeclarations}) à travers laquelle on itère (ligne 6). Pour chaque déclaration :
+        \begin{itemize}
+            \item On obtient l'expression de la déclaration (ligne 7) et on infère son type (ligne 8)
+            \item On peut alors vérifier le ce type est définitionnellement égal au type du but (ligne 9), et si c'est le cas on peut retourner l'expression (ligne 10).
+        \end{itemize}
+    \item On vérifie alors si l'une des expressions a bien le bon type. Si l'itération a retourné une expression, on clôt le but avec celle ci (ligne 13). Sinon, on renvoie une erreur avec le nom de la tactique, le but et le message à afficher.
+\end{itemize}
+
 
 \newpage
 

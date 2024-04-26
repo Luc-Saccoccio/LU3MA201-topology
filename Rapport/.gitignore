@@ -5,6 +5,7 @@
 *.fls
 *.log
 *.out
-*.toc
 *.pdf
+*.pyg
+*.toc
 _minted-main
