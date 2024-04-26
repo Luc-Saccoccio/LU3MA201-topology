@@ -257,18 +257,6 @@ lemma image_continuous_compact (f : X → Y ) (f_continuous: Continuous f) (h_co
 
 
 
--- je n'ai pas su formuler les deux définitions qui suivent, la première est une application qui prend en entrée une fonction bijective et renvoit son inverse
-
---def inverse  ( f: X → Y )  (h2: Function.Bijective f ):=
---def homeomorphisme ( f: X → Y ) (h1: Continuous f) (h2: Function.Bijective f ):= Continuous (inverse f)
-
--- ensuite je montrerai:
-
---Si (X; dX) et (Y; dY ) sont deux espaces metriques homeomorphes, le premier est compact si et seulement si le second est compact.
-
---Si f : X ! Y est une bijection continue entre deux espaces metriques, et si (X; dX) est compact, alors sa reciproque f􀀀1 est continue, et f est un homeomorphisme.
-
-
 def CauchySeq (u : ℕ → X) := ∀ ε > 0, ∃ N : ℕ , ∀ m ≥ N,∀ n ≥ N,  d (u m) (u n) < ε
 
 def Complet (K : Type v) [MetricSpace K] := ∀ u : ℕ → K, CauchySeq u → ∃ l : K, lim' u l  -- j'ai repris la def de Charles, pourquoi type v au lieu de type u? il semnle que ça ne change rien
@@ -331,19 +319,20 @@ theorem Converg_Cauchy (u : ℕ → X) : lim' u l → CauchySeq u := by
 --exemple "minimal" du problème de construction de suite : comment construire une suite injective dans un ensemble X, à partir de l'hypothèse qu'à chaque fois qu'on a une partie finie de X, on peut trouver un nouvel élément ?
 
 
+
 lemma h_suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l)) := by 
   classical
-  choose next hnext using H
-  let f := λ (s : Finset X) ↦ insert (next s) s
-  let sets := λ n ↦ Nat.iterate f n ∅
-  existsi next ∘ sets
-  intro k l h_kl
-  have h_rec: ∀ n: ℕ , sets (n + 1) = f (sets n) := by
-    simp only [sets]
+  choose new h_new using H
+  let f := λ (s : Finset X) ↦ insert (new s) s
+  let f_set := λ n ↦ Nat.iterate f n ∅
+  
+  have h_rec: ∀ n: ℕ , f_set (n + 1) = f (f_set n) := by
+    simp only [f_set]
     intro n
     apply  Function.iterate_succ_apply' f
-    
-  have inclu: next (sets k)  ∈ sets l:= by 
+  use new ∘ f_set
+  intro k l h_kl  
+  have inclu: new (f_set k)  ∈ f_set l:= by 
     induction l with
     | zero =>  cases h_kl  
 
@@ -355,36 +344,31 @@ lemma h_suite (X: Type) (H: (∀ A: Finset X, ∃ x: X, x ∉ A)): (∃ u: ℕ �
       cases h with
       | inl h1 => 
         apply ih at h1
-        exact Finset.mem_union_right {next (sets n)} h1
+        exact Finset.mem_union_right {new (f_set n)} h1
         
       | inr h2 => 
         rw [h2]
-        exact Finset.mem_union_left (sets n) (Finset.mem_singleton_self (next (sets n)))
+        exact Finset.mem_union_left (f_set n) (Finset.mem_singleton_self (new (f_set n)))
   simp
   push_neg
   intro j 
   rw [j] at inclu
-  apply hnext ( sets l) at inclu
+  apply h_new ( f_set l) at inclu
   exact inclu
 
 
 lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ x: Fin n → X, Set.univ ⊆ ( ⋃ xi ∈ List.ofFn x, B( xi , α ) ):= by
-
-  contrapose hX -- on suppose que la conclusion n'est pas vérifiée et on montre que X n'est pas conmpact
+  contrapose hX 
   push_neg at hX
-
-  -- on obtient une suite d'élément u tel que ∀n, et pour toute famille (x i)i≤ n, u n ∉ ⋃(i≤n) B(xi,α)
   have h : ∀n, ∀ xn : Fin n → X,  ∃ un ∈ Set.univ , un ∉ ⋃ xn_i ∈ List.ofFn xn, B(xn_i,α) := by
     intro n xn
     apply (Set.not_subset_iff_exists_mem_not_mem).mp (hX n xn)
   unfold Compact
   push_neg
-
   have H: ∀ A: Finset X, ∃ a ∈ Set.univ , a ∉ ⋃ xn_i ∈ A, B(xn_i,α) := by
     intro A
     let s:= Finset.toList A
     specialize h s.length
-
     let x : Fin s.length  → X := λ n ↦ s.get n 
     specialize h x
     obtain ⟨ a, ha, hna⟩ := h
@@ -392,30 +376,30 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
     apply And.intro
     exact ha
     push_neg  
-
     have eg1: s=  List.ofFn x:= by 
       apply  List.ext_get
       rw [List.length_ofFn]
       intro n h1 h2
       simp [x]
-
+    rw [<- eg1] at hna
+    simp [s] at hna
+    simp
+    exact hna
 
   have h': ∃ u: ℕ → X, ∀k l, k<l → (u k ≠ u l) ∧ d ( u k) (u l) >= α := by
     classical
-    choose next hnext using H 
-    let f := λ (s : Finset X) ↦ insert (next s) s
-    let sets := λ n ↦ Nat.iterate f n ∅
-    existsi next ∘ sets
+    choose new h_new using H 
+    let f := λ (s : Finset X) ↦ insert (new s) s
+    let f_set := λ n ↦ Nat.iterate f n ∅
+    existsi new ∘ f_set
     intro k l h_kl
-    have h_rec: ∀ n: ℕ , sets (n + 1) = f (sets n) := by
-      simp only [sets]
+    have h_rec: ∀ n: ℕ , f_set (n + 1) = f (f_set n) := by
+      simp only [f_set]
       intro n
-      apply  Function.iterate_succ_apply' f
-    
-    have inclu: next (sets k)  ∈ sets l:= by 
+      apply  Function.iterate_succ_apply' f 
+    have h_in: new (f_set k)  ∈ f_set l:= by 
       induction l with
       | zero =>  cases h_kl  
-
       | succ n ih => 
         rw [h_rec]
         simp only [f]
@@ -424,17 +408,16 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
         cases h with
       | inl h1 => 
         apply ih at h1
-        exact Finset.mem_union_right {next (sets n)} h1
-        
+        exact Finset.mem_union_right {new (f_set n)} h1 
       | inr h2 => 
         rw [h2]
-        exact Finset.mem_union_left (sets n) (Finset.mem_singleton_self (next (sets n)))
+        exact Finset.mem_union_left (f_set n) (Finset.mem_singleton_self (new (f_set n)))
     simp
     push_neg
     apply And.intro
     intro j 
-    rw [j] at inclu
-    have g: ((sets l): Set X) ⊆ ⋃ xn_i ∈( sets l), B(xn_i,α):= by
+    rw [j] at h_in
+    have g: ((f_set l): Set X) ⊆ ⋃ xn_i ∈( f_set l), B(xn_i,α):= by
       rw [Set.subset_def ]
       intro t ht
       simp
@@ -442,17 +425,17 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
       apply And.intro
       exact ht
       rw [dist_sep_eq_zero]
-      exact hα
- 
-    apply Set.not_mem_subset g ((hnext) ( sets l)).2 at inclu
-    exact inclu
-    have not_in_ball: (next (sets l)) ∉ B((next (sets k)),α):= by 
-      have h:=  (hnext (sets l)).2
+      exact hα 
+    apply Set.not_mem_subset g ((h_new) ( f_set l)).2 at h_in
+    exact h_in
+    have not_in_ball: (new (f_set l)) ∉ B((new (f_set k)),α):= by 
+      have h:=  (h_new (f_set l)).2
       simp
       simp at h 
-      exact h (next (sets k)) inclu
+      exact h (new (f_set k)) h_in
     simp at not_in_ball
     exact not_in_ball
+
   obtain ⟨ x, hx⟩ :=   h'
   use x
   intro f l hf h_lim 
@@ -464,6 +447,7 @@ lemma recouvrement_fini (hX: Compact X) (α : ℝ )(hα : α > 0) : ∃ n , ∃ 
   unfold strictement_croissante at hf
   have contradiction:= (hx (f N) (f ( N+1)) (hf (N+1) N (Nat.lt_succ_self N))  ).2 
   linarith
+
 
 
 
