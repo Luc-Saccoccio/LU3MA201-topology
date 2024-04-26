@@ -1278,7 +1278,7 @@ La preuve est simple. Il suffit d'introduire une suite \lean{x} de Cauchy. Comme
 
 \vspace{\baselineskip}
 
-\subsection{Compacité et recouvrements}
+\subsubsection{Compacité et recouvrements}
 
 Pour tout compact et pour tout rayon \lean{α} il existe un recouvrement fini par des des boules de rayon \lean{α}. Cette propriété est appelé précompacité. Pour le démontrer l'idée est de raisonner par contraposée. En supposant l'existence d'un recouvrement fini par des boules de rayon \lean{alpha} , on peut construire une suite dont tout les termes sont séparés d'une distance supérieur ou égale à \lean{alpha}. Une telle suite ne peut admettre de valeurs d'adhérence. La partie la plus complexe de la formalisation de ce lemme en Lean a été de construire cette suite par récurrence. Commençons donc par un exemple plus simple d'un tel procédé, "le petit lemme" \lean{h_suite}:
 
@@ -1448,12 +1448,12 @@ Ici s'achève nos travaux sur la compacité, ce dernier lemme pourrait être uti
 
 \subsection{Perspectives d’approfondissement}
 
-Nos travaux sur la compacité et la complétude peuvent encore être enrichis de preuves supplémentaires, nous en ajouterons probablement quelques une dans notre répertoire git. Travailler plus en profondeur sur les manuels nous permettrait également de revoir l’ensemble de notre code en le rendant plus soigné et plus concis. Enfin, pour aller plus loin, notre code pourrait être adapté au logiciel D$\exists\forall$DUCTION.
+Plusieurs résultats du cours peuvent encore être implémentés, en particulier les deux parties sur la connexité les espaces vectoriels normés, mais aussi le théorème du point fixe de Picard-Banach. Par ailleurs, plusieurs preuves gagneraient à être plus concises et ainsi gagner en lisibilité, sans pour autant en augmenter le complexité. Dans de nombreux cas, nous furent limité par notre connaissance encore partielle de Lean et de toutes ses tactiques, mais surtout de Mathlib. Enfin, pour aller plus loin, une évolution possible de notre code pourrait être de l'incorporer au logiciel D$\exists\forall$DUCTION \cite{deaduction}.
 
 
 \subsection{Intérêt pédagogique}
 
-Programmer en Lean nous a permis de prendre conscience de l’importance des hypothèses dans une démonstration. Cela nous a aussi aider à structurer notre raisonnement. En effet, l’interface de l’éditeur de code permet de visualiser chaque étape du raisonnement et nous offre un retour instantané sur la validité des arguments. Ainsi nous pouvons nous corriger facilement. Enfin, Lean permet d'explorer les fondements logiques des mathématiques, de mettre en lumière ces choses sous-entendus ou implicites des mathématiques habituelles, ainsi que les axiomes de base et les règles d'inférence.
+Lean force l'utilisateur à être formel dans ses preuves : il faut introduire les hypothèses avant de les utiliser, préciser quel théorème ou quel règle (de réécriture ou de simplification par exemple) a été utilisée, et conclure proprement chaque raisonnement. C'est néanmoins relativement agréable : l'interface de l'éditeur montre l'avancement de la preuve, la validité des arguments ainsi que les hypothèses introduites, et les tactiques permettent de rendre plus flexible le passage d'une étape du raisonnement à une autre. Autrement dit, excepté dans certains cas (comme par exemple la construction d'une suite par récurrence), l'usage de Lean force le mathématicien à être formel, sans pour autant bloquer le processus d'une preuve en étant trop strict. Cet outil nous a amené à réfléchir à l'importance des hypothèses et des arguments "implicites" (sous-entendus) dans les preuves que nous lisons ou faisons; mais aussi à nous intéresser aux axiomes de base et aux règles d'inférence qui fondent la base des systèmes logiques que nous utilisons.
 
 
 \subsection{Compétences acquises grâce au travail de groupe}
